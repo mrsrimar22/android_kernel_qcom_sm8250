@@ -51,39 +51,39 @@ enum pm_state {
  */
 #define JEITA_HYSTERESIS 20
 
-#define	BAT_OVP_FAULT_SHIFT		0
-#define	BAT_OCP_FAULT_SHIFT		1
-#define	BUS_OVP_FAULT_SHIFT		2
-#define	BUS_OCP_FAULT_SHIFT		3
-#define	BAT_THERM_FAULT_SHIFT		4
-#define	BUS_THERM_FAULT_SHIFT		5
-#define	DIE_THERM_FAULT_SHIFT		6
+#define BAT_OVP_FAULT_SHIFT		0
+#define BAT_OCP_FAULT_SHIFT		1
+#define BUS_OVP_FAULT_SHIFT		2
+#define BUS_OCP_FAULT_SHIFT		3
+#define BAT_THERM_FAULT_SHIFT		4
+#define BUS_THERM_FAULT_SHIFT		5
+#define DIE_THERM_FAULT_SHIFT		6
 
-#define	BAT_OVP_FAULT_MASK		(1 << BAT_OVP_FAULT_SHIFT)
-#define	BAT_OCP_FAULT_MASK		(1 << BAT_OCP_FAULT_SHIFT)
-#define	BUS_OVP_FAULT_MASK		(1 << BUS_OVP_FAULT_SHIFT)
-#define	BUS_OCP_FAULT_MASK		(1 << BUS_OCP_FAULT_SHIFT)
-#define	BAT_THERM_FAULT_MASK		(1 << BAT_THERM_FAULT_SHIFT)
-#define	BUS_THERM_FAULT_MASK		(1 << BUS_THERM_FAULT_SHIFT)
-#define	DIE_THERM_FAULT_MASK		(1 << DIE_THERM_FAULT_SHIFT)
+#define BAT_OVP_FAULT_MASK		(1 << BAT_OVP_FAULT_SHIFT)
+#define BAT_OCP_FAULT_MASK		(1 << BAT_OCP_FAULT_SHIFT)
+#define BUS_OVP_FAULT_MASK		(1 << BUS_OVP_FAULT_SHIFT)
+#define BUS_OCP_FAULT_MASK		(1 << BUS_OCP_FAULT_SHIFT)
+#define BAT_THERM_FAULT_MASK		(1 << BAT_THERM_FAULT_SHIFT)
+#define BUS_THERM_FAULT_MASK		(1 << BUS_THERM_FAULT_SHIFT)
+#define DIE_THERM_FAULT_MASK		(1 << DIE_THERM_FAULT_SHIFT)
 
-#define	BAT_OVP_ALARM_SHIFT		0
-#define	BAT_OCP_ALARM_SHIFT		1
-#define	BUS_OVP_ALARM_SHIFT		2
-#define	BUS_OCP_ALARM_SHIFT		3
-#define	BAT_THERM_ALARM_SHIFT		4
-#define	BUS_THERM_ALARM_SHIFT		5
-#define	DIE_THERM_ALARM_SHIFT		6
+#define BAT_OVP_ALARM_SHIFT		0
+#define BAT_OCP_ALARM_SHIFT		1
+#define BUS_OVP_ALARM_SHIFT		2
+#define BUS_OCP_ALARM_SHIFT		3
+#define BAT_THERM_ALARM_SHIFT		4
+#define BUS_THERM_ALARM_SHIFT		5
+#define DIE_THERM_ALARM_SHIFT		6
 #define BAT_UCP_ALARM_SHIFT		7
 
-#define	BAT_OVP_ALARM_MASK		(1 << BAT_OVP_ALARM_SHIFT)
-#define	BAT_OCP_ALARM_MASK		(1 << BAT_OCP_ALARM_SHIFT)
-#define	BUS_OVP_ALARM_MASK		(1 << BUS_OVP_ALARM_SHIFT)
-#define	BUS_OCP_ALARM_MASK		(1 << BUS_OCP_ALARM_SHIFT)
-#define	BAT_THERM_ALARM_MASK		(1 << BAT_THERM_ALARM_SHIFT)
-#define	BUS_THERM_ALARM_MASK		(1 << BUS_THERM_ALARM_SHIFT)
-#define	DIE_THERM_ALARM_MASK		(1 << DIE_THERM_ALARM_SHIFT)
-#define	BAT_UCP_ALARM_MASK		(1 << BAT_UCP_ALARM_SHIFT)
+#define BAT_OVP_ALARM_MASK		(1 << BAT_OVP_ALARM_SHIFT)
+#define BAT_OCP_ALARM_MASK		(1 << BAT_OCP_ALARM_SHIFT)
+#define BUS_OVP_ALARM_MASK		(1 << BUS_OVP_ALARM_SHIFT)
+#define BUS_OCP_ALARM_MASK		(1 << BUS_OCP_ALARM_SHIFT)
+#define BAT_THERM_ALARM_MASK		(1 << BAT_THERM_ALARM_SHIFT)
+#define BUS_THERM_ALARM_MASK		(1 << BUS_THERM_ALARM_SHIFT)
+#define DIE_THERM_ALARM_MASK		(1 << DIE_THERM_ALARM_SHIFT)
+#define BAT_UCP_ALARM_MASK		(1 << BAT_UCP_ALARM_SHIFT)
 
 #define VBAT_REG_STATUS_SHIFT		0
 #define IBAT_REG_STATUS_SHIFT		1
@@ -129,22 +129,22 @@ struct cp_device {
 	bool vbat_reg;
 	bool ibat_reg;
 
-	int  vout_volt;
-	int  vbat_volt;
-	int  vbus_volt;
-	int  ibat_curr;
-	int  ibat_curr_cp;
-	int  ibat_curr_sw;
-	int  ibus_curr;
-	int  ibus_curr_cp;
-	int  ibus_curr_sw;
+	int vout_volt;
+	int vbat_volt;
+	int vbus_volt;
+	int ibat_curr;
+	int ibat_curr_cp;
+	int ibat_curr_sw;
+	int ibus_curr;
+	int ibus_curr_cp;
+	int ibus_curr_sw;
 
-	int  vbus_error_low;
-	int  vbus_error_high;
+	int vbus_error_low;
+	int vbus_error_high;
 
-	int  bat_temp;
-	int  bus_temp;
-	int  die_temp;
+	int bat_temp;
+	int bus_temp;
+	int die_temp;
 };
 
 

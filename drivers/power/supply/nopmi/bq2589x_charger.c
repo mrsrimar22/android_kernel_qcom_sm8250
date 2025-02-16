@@ -148,7 +148,6 @@ static int bq2589x_read_byte(struct bq2589x *bq, u8 *data, u8 reg)
 		udelay(200);
 	}
 	mutex_unlock(&bq->i2c_rw_lock);
-
 	return ret;
 }
 
@@ -221,12 +220,14 @@ static int bq2589x_set_otg_volt(struct bq2589x *bq, int volt)
 			volt = SC89890H_BOOSTV_BASE;
 		if (volt > SC89890H_BOOSTV_BASE + (BQ2589X_BOOSTV_MASK >> BQ2589X_BOOSTV_SHIFT) * SC89890H_BOOSTV_LSB)
 			volt = SC89890H_BOOSTV_BASE + (BQ2589X_BOOSTV_MASK >> BQ2589X_BOOSTV_SHIFT) * SC89890H_BOOSTV_LSB;
+
 		val = ((volt - SC89890H_BOOSTV_BASE) / SC89890H_BOOSTV_LSB) << BQ2589X_BOOSTV_SHIFT;
 	} else {
 		if (volt < BQ2589X_BOOSTV_BASE)
 			volt = BQ2589X_BOOSTV_BASE;
 		if (volt > BQ2589X_BOOSTV_BASE + (BQ2589X_BOOSTV_MASK >> BQ2589X_BOOSTV_SHIFT) * BQ2589X_BOOSTV_LSB)
 			volt = BQ2589X_BOOSTV_BASE + (BQ2589X_BOOSTV_MASK >> BQ2589X_BOOSTV_SHIFT) * BQ2589X_BOOSTV_LSB;
+
 		val = ((volt - BQ2589X_BOOSTV_BASE) / BQ2589X_BOOSTV_LSB) << BQ2589X_BOOSTV_SHIFT;
 	}
 
@@ -322,6 +323,7 @@ int bq2589x_adc_start(struct bq2589x *bq, bool oneshot)
 
 	if (((val & BQ2589X_CONV_RATE_MASK) >> BQ2589X_CONV_RATE_SHIFT) == BQ2589X_ADC_CONTINUE_ENABLE)
 		return 0; /*is doing continuous scan*/
+
 	if (oneshot)
 		ret = bq2589x_update_bits(bq, BQ2589X_REG_02, BQ2589X_CONV_START_MASK, BQ2589X_CONV_START << BQ2589X_CONV_START_SHIFT);
 	else
@@ -488,7 +490,6 @@ int bq2589x_set_chargevoltage(struct bq2589x *bq, int volt)
 	u8 val;
 
 	val = (volt - BQ2589X_VREG_BASE) / BQ2589X_VREG_LSB;
-
 	return bq2589x_update_bits(bq, BQ2589X_REG_06, BQ2589X_VREG_MASK, val << BQ2589X_VREG_SHIFT);
 }
 EXPORT_SYMBOL_GPL(bq2589x_set_chargevoltage);
@@ -526,7 +527,6 @@ int bq2589x_set_input_volt_limit(struct bq2589x *bq, int volt)
 	u8 val;
 
 	val = (volt - BQ2589X_VINDPM_BASE) / BQ2589X_VINDPM_LSB;
-
 	return bq2589x_update_bits(bq, BQ2589X_REG_0D, BQ2589X_VINDPM_MASK, val << BQ2589X_VINDPM_SHIFT);
 }
 EXPORT_SYMBOL_GPL(bq2589x_set_input_volt_limit);
@@ -539,7 +539,6 @@ int bq2589x_set_input_current_limit(struct bq2589x *bq, int curr)
 		curr = BQ2589X_IINLIM_BASE;
 
 	val = (curr - BQ2589X_IINLIM_BASE) / BQ2589X_IINLIM_LSB;
-
 	return bq2589x_update_bits(bq, BQ2589X_REG_00, BQ2589X_IINLIM_MASK, val << BQ2589X_IINLIM_SHIFT);
 }
 EXPORT_SYMBOL_GPL(bq2589x_set_input_current_limit);
@@ -596,7 +595,6 @@ u8 bq2589x_get_charging_status(struct bq2589x *bq)
 
 	val &= BQ2589X_CHRG_STAT_MASK;
 	val >>= BQ2589X_CHRG_STAT_SHIFT;
-
 	if (val == BQ2589X_CHRG_STAT_IDLE) {
 		bq_dbg(PR_OEM, "not charging\n");
 		return POWER_SUPPLY_STATUS_DISCHARGING;
@@ -776,6 +774,7 @@ int bq2589x_get_hiz_mode(struct bq2589x *bq, u8 *state)
 	ret = bq2589x_read_byte(bq, &val, BQ2589X_REG_00);
 	if (ret)
 		return ret;
+
 	*state = (val & BQ2589X_ENHIZ_MASK) >> BQ2589X_ENHIZ_SHIFT;
 
 	return 0;
@@ -892,6 +891,7 @@ static int bq2589x_enable_term(struct bq2589x* bq, bool enable)
 		val = BQ2589X_TERM_ENABLE << BQ2589X_EN_TERM_SHIFT;
 	else
 		val = BQ2589X_TERM_DISABLE << BQ2589X_EN_TERM_SHIFT;
+
 	ret = bq2589x_update_bits(bq, BQ2589X_REG_07, BQ2589X_EN_TERM_MASK, val);
 
 	return ret;
@@ -907,6 +907,7 @@ static int bq2589x_enable_auto_dpdm(struct bq2589x* bq, bool enable)
 		val = BQ2589X_AUTO_DPDM_ENABLE << BQ2589X_AUTO_DPDM_EN_SHIFT;
 	else
 		val = BQ2589X_AUTO_DPDM_DISABLE << BQ2589X_AUTO_DPDM_EN_SHIFT;
+
 	ret = bq2589x_update_bits(bq, BQ2589X_REG_02, BQ2589X_AUTO_DPDM_EN_MASK, val);
 
 	return ret;
@@ -922,6 +923,7 @@ static int bq2589x_use_absolute_vindpm(struct bq2589x* bq, bool enable)
 		val = BQ2589X_FORCE_VINDPM_ENABLE << BQ2589X_FORCE_VINDPM_SHIFT;
 	else
 		val = BQ2589X_FORCE_VINDPM_DISABLE << BQ2589X_FORCE_VINDPM_SHIFT;
+
 	ret = bq2589x_update_bits(bq, BQ2589X_REG_0D, BQ2589X_FORCE_VINDPM_MASK, val);
 
 	return ret;
@@ -937,6 +939,7 @@ static int bq2589x_enable_ico(struct bq2589x* bq, bool enable)
 		val = BQ2589X_ICO_ENABLE << BQ2589X_ICOEN_SHIFT;
 	else
 		val = BQ2589X_ICO_DISABLE << BQ2589X_ICOEN_SHIFT;
+
 	ret = bq2589x_update_bits(bq, BQ2589X_REG_02, BQ2589X_ICOEN_MASK, val);
 
 	return ret;
@@ -1009,12 +1012,13 @@ static int bq2589x_init_device(struct bq2589x *bq)
 	}
 //modify by HTH-209427/HTH-209841 at 2022/05/12 end
 	bq2589x_disable_watchdog_timer(bq);
-
 	bq2589x_enable_auto_dpdm(bq, bq->cfg.enable_auto_dpdm);
 	bq2589x_enable_term(bq, bq->cfg.enable_term);
+
 	/*force use absolute vindpm if auto_dpdm not enabled*/
 	if (!bq->cfg.enable_auto_dpdm)
 		bq->cfg.use_absolute_vindpm = true;
+
 	bq2589x_use_absolute_vindpm(bq, bq->cfg.use_absolute_vindpm);
 
 	ret = bq2589x_set_vindpm_offset(bq, 600);
@@ -1056,6 +1060,7 @@ static int bq2589x_init_device(struct bq2589x *bq)
 
 	//bq2589x_update_bits(bq, BQ2589X_REG_01, 0x2, 0 << 1);
 	bq2589x_adc_stop(bq);
+
 	return ret;
 }
 
@@ -1069,7 +1074,6 @@ static int bq2589x_charge_status(struct bq2589x *bq)
 
 	val &= BQ2589X_CHRG_STAT_MASK;
 	val >>= BQ2589X_CHRG_STAT_SHIFT;
-
 	switch (val) {
 	case BQ2589X_CHRG_STAT_FASTCHG:
 		return POWER_SUPPLY_CHARGE_TYPE_FAST;
@@ -1094,6 +1098,7 @@ static enum power_supply_property bq2589x_charger_props[] = {
 	POWER_SUPPLY_PROP_TERM_CURRENT,
 	POWER_SUPPLY_PROP_BATT_CHARGE_TYPE,
 };
+
 extern int get_prop_battery_charging_enabled(struct votable *usb_icl_votable,
 					     union power_supply_propval *val);
 
@@ -1197,6 +1202,7 @@ static int bq2589x_wall_prop_is_writeable(struct power_supply *psy,
 	default:
 		break;
 	}
+
 	return 0;
 }
 
@@ -1269,15 +1275,18 @@ static int bq2589x_parse_dt(struct device *dev, struct bq2589x *bq)
 	int ret;
 	struct device_node *np = dev->of_node;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,vbus-volt-high-level", &pe.high_volt_level);
+	ret = of_property_read_u32(np, "ti,bq2589x,vbus-volt-high-level",
+			&pe.high_volt_level);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,vbus-volt-low-level", &pe.low_volt_level);
+	ret = of_property_read_u32(np, "ti,bq2589x,vbus-volt-low-level",
+			&pe.low_volt_level);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,vbat-min-volt-to-tuneup", &pe.vbat_min_volt);
+	ret = of_property_read_u32(np, "ti,bq2589x,vbat-min-volt-to-tuneup",
+			&pe.vbat_min_volt);
 	if (ret)
 		return ret;
 
@@ -1286,35 +1295,43 @@ static int bq2589x_parse_dt(struct device *dev, struct bq2589x *bq)
 	bq->cfg.enable_ico = of_property_read_bool(np, "ti,bq2589x,enable-ico");
 	bq->cfg.use_absolute_vindpm = of_property_read_bool(np, "ti,bq2589x,use-absolute-vindpm");
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-voltage", &bq->cfg.charge_voltage);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-voltage",
+			&bq->cfg.charge_voltage);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-current", &bq->cfg.charge_current);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-current",
+			&bq->cfg.charge_current);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-3500", &bq->cfg.charge_current_3500);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-3500",
+			&bq->cfg.charge_current_3500);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-1500", &bq->cfg.charge_current_1500);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-1500",
+			&bq->cfg.charge_current_1500);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-1000", &bq->cfg.charge_current_1000);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-1000",
+			&bq->cfg.charge_current_1000);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-500", &bq->cfg.charge_current_500);
+	ret = of_property_read_u32(np, "ti,bq2589x,charge-current-500",
+			&bq->cfg.charge_current_500);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,input-current-2000", &bq->cfg.input_current_2000);
+	ret = of_property_read_u32(np, "ti,bq2589x,input-current-2000",
+			&bq->cfg.input_current_2000);
 	if (ret)
 		return ret;
 
-	ret = of_property_read_u32(np, "ti,bq2589x,term-current", &bq->cfg.term_current);
+	ret = of_property_read_u32(np, "ti,bq2589x,term-current",
+			&bq->cfg.term_current);
 	if (ret)
 		return ret;
 
@@ -1406,8 +1423,8 @@ int main_set_charge_enable(bool en)
 		ret = bq2589x_enable_charger(g_bq);
 	else
 		ret = bq2589x_disable_charger(g_bq);
-
 	bq_dbg(PR_OEM, "end set_charge_enable ret = %d\n", ret);
+
 	return ret;
 }
 
@@ -1437,8 +1454,8 @@ int main_set_charge_current(int curr)
 {
 	if (!g_bq)
 		return -1;
-	vote(g_bq->fcc_votable, MAIN_SET_VOTER, true, curr);
 
+	vote(g_bq->fcc_votable, MAIN_SET_VOTER, true, curr);
 	bq_dbg(PR_OEM, "end main_set_charge_current\n");
 	return 0;
 }
@@ -1671,7 +1688,7 @@ static void bq2589x_tune_volt_workfunc(struct work_struct *work)
 	bq->vbus_volt = bq2589x_adc_read_vbus_volt(bq);
 
 	if ((pe.tune_up_volt && bq->vbus_volt > pe.target_volt) ||
-			(pe.tune_down_volt && bq->vbus_volt < pe.target_volt)) {
+		(pe.tune_down_volt && bq->vbus_volt < pe.target_volt)) {
 		pe.tune_done = true;
 		bq2589x_adjust_absolute_vindpm(bq);
 		if (pe.tune_up_volt)
@@ -1682,6 +1699,7 @@ static void bq2589x_tune_volt_workfunc(struct work_struct *work)
 	if (pe.tune_count > 10) {
 		pe.tune_fail = true;
 		bq2589x_adjust_absolute_vindpm(bq);
+
 		if (pe.tune_up_volt)
 			schedule_delayed_work(&bq->ico_work, 0);
 		return;
@@ -1734,7 +1752,7 @@ static void bq2589x_monitor_workfunc(struct work_struct *work)
 			pr_err("%s: get battery temp fail\n", __func__);
 		}
 		batt_temp = propval.intval;
-		pr_info("%s: get battery temp: %d\n", __func__, batt_temp);
+		pr_info("%s: get battery temp :%d\n", __func__, batt_temp);
 		ret = power_supply_get_property(bq->bms_psy,
 				POWER_SUPPLY_PROP_VOLTAGE_NOW, &propval);
 		if (ret < 0) {
@@ -1797,7 +1815,6 @@ static void bq2589x_monitor_workfunc(struct work_struct *work)
 		pe.tune_fail = false;
 		schedule_delayed_work(&bq->pe_volt_tune_work, 0);
 	}
-
 	switch (bq->vbus_type) {
 	case BQ2589X_VBUS_MAXC:
 		bq2589x_enable_ico(bq, false);
@@ -1867,9 +1884,6 @@ static int bq2589x_set_charger_type(struct bq2589x *bq,
 	int ret = 0;
 	union power_supply_propval propval;
 
-	bq->chg_type = chg_type;
-	propval.intval = (chg_type != POWER_SUPPLY_TYPE_UNKNOWN);
-
 	if (bq->wall_psy == NULL) {
 		bq->wall_psy = power_supply_get_by_name("bbc");
 		if (bq->wall_psy == NULL) {
@@ -1886,10 +1900,20 @@ static int bq2589x_set_charger_type(struct bq2589x *bq,
 		}
 	}
 
+	if (chg_type != POWER_SUPPLY_TYPE_UNKNOWN)
+		propval.intval = true;
+	else
+		propval.intval = false;
+
 	ret = power_supply_set_property(bq->wall_psy,
 			POWER_SUPPLY_PROP_ONLINE, &propval);
 	if (ret < 0)
 		pr_err("inform power supply chg_online failed: %d\n", ret);
+
+	if (chg_type != POWER_SUPPLY_TYPE_UNKNOWN)
+		propval.intval = true;
+	else
+		propval.intval = false;
 
 	if (bq->pd_active && (propval.intval == false)) {
 		// Do Nothing for fix CtoC disconnection
@@ -1901,16 +1925,16 @@ static int bq2589x_set_charger_type(struct bq2589x *bq,
 	}
 
 	propval.intval = chg_type;
-
 	ret = power_supply_set_property(bq->wall_psy,
 			POWER_SUPPLY_PROP_CHARGE_TYPE, &propval);
 	if (ret < 0)
-		pr_err("inform power supply charge type failed: %d\n", ret);
+		pr_err("%s: set prop CHARGE_TYPE fail, ret: %d\n", __func__, ret);
 
+	propval.intval = chg_type;
 	ret = power_supply_set_property(bq->usb_psy,
 			POWER_SUPPLY_PROP_REAL_TYPE, &propval);
 	if (ret < 0)
-		pr_err("%s: set prop REAL_TYPE fail ret: %d\n", __func__, ret);
+		pr_err("%s: set prop REAL_TYPE fail, ret: %d\n", __func__, ret);
 
 	power_supply_changed(bq->usb_psy);
 	return ret;
@@ -2030,6 +2054,7 @@ static void bq2589x_charger_irq_workfunc(struct work_struct *work)
 		ret = bq2589x_read_byte(bq, &vbus_status, BQ2589X_REG_11);
 		if (ret)
 			return;
+
 		if (!(vbus_status & BQ2589X_VBUS_GD_MASK) && (bq->status & BQ2589X_STATUS_PLUGIN)) {
 			bq2589x_usb_switch(bq, false);
 			bq2589x_adc_stop(bq);
@@ -2337,8 +2362,8 @@ static int chg_dis_vote_callback(struct votable *votable, void *data,
 		pr_err("failed to disable: %d\n",disable);
 		return rc;
 	}
-
 	bq_dbg(PR_OEM, "disable: %d\n", disable);
+
 	return 0;
 }
 
@@ -2356,8 +2381,8 @@ static int fv_vote_callback(struct votable *votable, void *data,
 		pr_err("failed to set charge voltage\n");
 		return rc;
 	}
-
 	bq_dbg(PR_OEM, "fv: %d\n", fv_mv);
+
 	return 0;
 }
 
@@ -2369,7 +2394,6 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 	bq_dbg(PR_OEM, "icl: %d\n", icl_ma);
 	if (icl_ma < 0)
 		return 0;
-
 	if (icl_ma > BQ2589X_MAX_ICL)
 		icl_ma = BQ2589X_MAX_ICL;
 
@@ -2393,6 +2417,7 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 		rc = bq2589x_disable_charger(bq);
 	else
 		rc = bq2589x_enable_charger(bq);
+
 	return 0;
 }*/ //for ovp lead reboot
 

@@ -2,7 +2,7 @@
 
 #include "nopmi_chg.h"
 
-//#define PROBE_CNT_MAX 10
+#define PROBE_CNT_MAX 10
 #define MAIN_CHG_SUSPEND_VOTER "MAIN_CHG_SUSPEND_VOTER"
 #define CHG_INPUT_SUSPEND_VOTER "CHG_INPUT_SUSPEND_VOTER"
 #define THERMAL_DAEMON_VOTER "THERMAL_DAEMON_VOTER"
@@ -10,8 +10,8 @@
 #define SLOW_CHARGING_CURRENT_STANDARD 400
 
 static const int NOPMI_CHG_WORKFUNC_GAP = 10000;
-static const int NOPMI_CHG_WORKFUNC_FIRST_GAP = 5000;
 static const int NOPMI_CHG_CV_STEP_MONITOR_WORKFUNC_GAP = 2000;
+static const int NOPMI_CHG_WORKFUNC_FIRST_GAP = 5000;
 
 struct nopmi_chg *g_nopmi_chg = NULL;
 
@@ -86,9 +86,8 @@ static int nopmi_set_prop_system_temp_level(struct nopmi_chg *nopmi_chg,
 
 		rc = vote(nopmi_chg->fcc_votable, THERMAL_DAEMON_VOTER, true, 0);
 		if (rc < 0) {
-			pr_err("%s: fcc vote failed \n", __func__);
+			pr_err("%s: fcc vote failed\n", __func__);
 		}
-
 		return rc;
 	}
 
@@ -97,8 +96,7 @@ static int nopmi_set_prop_system_temp_level(struct nopmi_chg *nopmi_chg,
 	if (nopmi_chg->system_temp_level == 0) {
 		rc = vote(nopmi_chg->fcc_votable, THERMAL_DAEMON_VOTER, false, 0);
 	} else {
-		rc = vote(nopmi_chg->fcc_votable, THERMAL_DAEMON_VOTER, true,
-				nopmi_chg->thermal_mitigation[nopmi_chg->system_temp_level] / 1000); //divide 1000 to match maxim driver fcc as mA
+		rc = vote(nopmi_chg->fcc_votable, THERMAL_DAEMON_VOTER, true, nopmi_chg->thermal_mitigation[nopmi_chg->system_temp_level] / 1000); //divide 1000 to match maxim driver fcc as mA
 	}
 
 	return rc;
@@ -267,7 +265,7 @@ static int nopmi_batt_get_prop_internal(struct power_supply *psy,
 	}
 
 	if (rc < 0) {
-		pr_err("Couldn't get prop %d, rc=%d\n", psp, rc);
+		pr_debug("Couldn't get prop %d, rc=%d\n", psp, rc);
 		return -ENODATA;
 	}
 
@@ -489,6 +487,7 @@ static int nopmi_usb_get_prop_internal(struct power_supply *psy,
 	int rc = 0;
 
 	val->intval = 0;
+
 	switch (psp) {
 #if 0
 	case POWER_SUPPLY_PROP_PRESENT:
@@ -623,6 +622,10 @@ static int nopmi_usb_get_prop(struct power_supply *psy,
 		val->intval = nopmi_get_quick_charge_type(psy);
 		ret = 0;
 		break;
+	case POWER_SUPPLY_PROP_MTBF_CUR:
+		val->intval = g_nopmi_chg->mtbf_cur;
+		ret = 0;
+		break;
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_NOW:
 		val->intval = get_effective_result(g_nopmi_chg->usb_icl_votable);
 		ret = 0;
@@ -631,15 +634,10 @@ static int nopmi_usb_get_prop(struct power_supply *psy,
 		val->intval = get_effective_result(g_nopmi_chg->fv_votable);
 		ret = 0;
 		break;
-	case POWER_SUPPLY_PROP_MTBF_CUR:
-		val->intval = g_nopmi_chg->mtbf_cur;
-		ret = 0;
-		break;
 	default:
 		break;
 	}
 #endif
-
 	return ret;
 }
 
@@ -737,25 +735,25 @@ static int nopmi_usb_set_prop(struct power_supply *psy,
 				(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
 				(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type())) {
 			if (g_nopmi_chg->usb_online) {
-				pr_info("%s: wakelock held\n", __func__);
+				pr_info("%s: Acquire wakelock\n", __func__);
 				pm_stay_awake(g_nopmi_chg->dev);
 				start_nopmi_chg_workfunc();
 			} else {
 				stop_nopmi_chg_workfunc();
 				pm_relax(g_nopmi_chg->dev);
-				pr_info("%s: wakelock released\n", __func__);
+				pr_info("%s: Release wakelock\n", __func__);
 			}
 		}
 		ret = 0;
 		break;
-	case POWER_SUPPLY_PROP_REAL_TYPE:
-		//for maxim solution, set it in global setting.
-		g_nopmi_chg->real_type = val->intval;
-		break;
 	case POWER_SUPPLY_PROP_MTBF_CUR:
 		g_nopmi_chg->mtbf_cur = val->intval;
-		pr_info("%s psp=%d Set MTBF current, val->intval=%d\n", __func__, psp, val->intval);
+		pr_info("%s psp=%d, Set MTBF current, val->intval=%d", __func__, psp, val->intval);
 		ret = 0;
+		break;
+	case POWER_SUPPLY_PROP_REAL_TYPE:
+		//for maxim solution, use persent use g_nopmi_chg->real_type, we have to set it in global setting.
+		g_nopmi_chg->real_type = val->intval;
 		break;
 	default:
 		break;
@@ -828,11 +826,10 @@ static int nopmi_parse_dt_jeita(struct nopmi_chg *chg, struct device_node *np)
 {
 	u32 val;
 
-	if (of_property_read_bool(np, "enable_sw_jeita")) {
+	if (of_property_read_bool(np, "enable_sw_jeita"))
 		chg->jeita_ctl.dt.enable_sw_jeita = true;
-	} else {
+	else
 		chg->jeita_ctl.dt.enable_sw_jeita = false;
-	}
 
 	if (of_property_read_u32(np, "jeita_temp_above_t4_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_above_t4_cv = val;
@@ -1068,7 +1065,7 @@ static int nopmi_parse_dt_thermal(struct nopmi_chg *chg, struct device_node *np)
 		rc = of_property_read_u32_array(np, "nopmi,thermal-mitigation",
 				chg->thermal_mitigation, chg->thermal_levels);
 		if (rc < 0) {
-			pr_err("Couldn't read therm limits, rc=%d\n", rc);
+			pr_err("Couldn't read threm limits, rc=%d\n", rc);
 			return rc;
 		}
 	}
@@ -1082,7 +1079,7 @@ static int nopmi_parse_dt(struct nopmi_chg *chg)
 	int rc = 0;
 
 	if (!np) {
-		pr_err("device tree node missing\n");
+		pr_err("%s: device tree node missing\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1090,7 +1087,7 @@ static int nopmi_parse_dt(struct nopmi_chg *chg)
 	if (rc < 0)
 		chg->dt.batt_profile_fv_uv = -EINVAL;
 	else
-		pr_info("nopmi_parse_dt %d\n", chg->dt.batt_profile_fv_uv);
+		pr_info("%s: %d\n", __func__, chg->dt.batt_profile_fv_uv);
 
 	rc = nopmi_parse_dt_jeita(chg, np);
 	if (rc < 0)
@@ -1107,7 +1104,7 @@ static void nopmi_chg_workfunc(struct work_struct *work)
 {
 	struct nopmi_chg *chg = container_of(work, struct nopmi_chg, nopmi_chg_work.work);
 
-	pr_notice("2021.09.22 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
+	pr_info("2021.09.22 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
 	if (nopmi_chg_is_usb_present(chg->usb_psy)) {
 		start_nopmi_chg_jeita_workfunc();
 		schedule_delayed_work(&chg->nopmi_chg_work,
@@ -1117,7 +1114,7 @@ static void nopmi_chg_workfunc(struct work_struct *work)
 
 static void start_nopmi_chg_workfunc(void)
 {
-	pr_notice("2021.09.21 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
+	pr_info("2021.09.21 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
 	if (g_nopmi_chg) {
 		schedule_delayed_work(&g_nopmi_chg->nopmi_chg_work, 0);
 		schedule_delayed_work(&g_nopmi_chg->cvstep_monitor_work,
@@ -1127,7 +1124,7 @@ static void start_nopmi_chg_workfunc(void)
 
 static void stop_nopmi_chg_workfunc(void)
 {
-	pr_notice("2021.09.21 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
+	pr_info("2021.09.21 wsy %s g_nopmi_chg: 0x%x\n", __func__, g_nopmi_chg);
 	if (g_nopmi_chg) {
 		cancel_delayed_work_sync(&g_nopmi_chg->cvstep_monitor_work);
 		cancel_delayed_work_sync(&g_nopmi_chg->nopmi_chg_work);
@@ -1137,81 +1134,82 @@ static void stop_nopmi_chg_workfunc(void)
 
 static void nopmi_cv_step_monitor_work(struct work_struct *work)
 {
-#if 1
 	struct nopmi_chg *nopmi_chg = container_of(work, struct nopmi_chg, cvstep_monitor_work.work);
-#endif
 	//struct nopmi_chg *nopmi_chg = g_nopmi_chg;
 	struct step_config *pcc_cv_step_config;
 	static u32 count = 0;
-	u32 i = 0, stepdown = 0, finalFCC = 0, votFCC = 0;
-	u32 step_table_max;
-	int batt_curr = 0, batt_volt = 0, rc = 0;
+	int rc;
+	int batt_curr = 0, batt_volt = 0;
+	u32 i, step_table_max;
+	u32 stepdown = 0, finalFCC = 0, votFCC = 0;
 	union power_supply_propval pval = {0, };
 
-	if (nopmi_chg->bms_psy) {
-		pval.intval = 0;
-		rc = power_supply_get_property(nopmi_chg->bms_psy,
-				POWER_SUPPLY_PROP_CURRENT_NOW, &pval);
-		if (rc < 0) {
-			pr_err("%s: get POWER_SUPPLY_PROP_CURRENT_NOW fail\n", __func__);
-			goto out;
-		}
-		batt_curr = pval.intval / 1000;
-
-		pval.intval = 0;
-		rc = power_supply_get_property(nopmi_chg->bms_psy,
-				POWER_SUPPLY_PROP_VOLTAGE_NOW, &pval);
-		if (rc < 0) {
-			pr_err("%s: get POWER_SUPPLY_PROP_CURRENT_NOW fail\n", __func__);
-			goto out;
-		}
-		batt_volt = pval.intval / 1000;
-	} else {
+	if (!nopmi_chg->bms_psy) {
+		pr_err("%s: bms_psy is NULL, exiting\n", __func__);
 		goto out;
 	}
-	pr_info("fg_cc_cv_step_check: batt_volt=%d, batt_curr=%d", batt_volt, batt_curr);
 
-	/*discharging*/
+	rc = power_supply_get_property(nopmi_chg->bms_psy,
+			POWER_SUPPLY_PROP_CURRENT_NOW, &pval);
+	if (rc < 0) {
+		pr_err("%s: Failed to get CURRENT_NOW, rc=%d\n", __func__, rc);
+		goto out;
+	}
+	batt_curr = pval.intval / 1000;
+
+	rc = power_supply_get_property(nopmi_chg->bms_psy,
+			POWER_SUPPLY_PROP_VOLTAGE_NOW, &pval);
+	if (rc < 0) {
+		pr_err("%s: Failed to get VOLTAGE_NOW, rc=%d\n", __func__, rc);
+		goto out;
+	}
+	batt_volt = pval.intval / 1000;
+
+	pr_info("fg_cc_cv_step_check: batt_volt=%d, batt_curr=%d\n", batt_volt, batt_curr);
+
 	if (!nopmi_chg->fcc_votable) {
 		nopmi_chg->fcc_votable = find_votable("FCC");
-		if (!nopmi_chg->fcc_votable)
+		if (!nopmi_chg->fcc_votable) {
+			pr_err("%s: FCC votable not found, exiting\n", __func__);
 			goto out;
+		}
 	}
+
+	/* discharging */
 	if (batt_curr < 0) {
-		vote(nopmi_chg->fcc_votable, CC_CV_STEP_VOTER, false, votFCC);
+		vote(nopmi_chg->fcc_votable, CC_CV_STEP_VOTER, false, 0);
 		goto out;
 	}
 
 	pcc_cv_step_config = cc_cv_step_config;
 	step_table_max = STEP_TABLE_MAX;
 	for (i = 0; i < step_table_max; i++) {
-		if ((batt_volt >= (pcc_cv_step_config[i].volt_lim - CV_BATT_VOLT_HYSTERESIS)) && (batt_curr > pcc_cv_step_config[i].curr_lim)) {
+		if ((batt_volt >= (pcc_cv_step_config[i].volt_lim - CV_BATT_VOLT_HYSTERESIS)) &&
+				(batt_curr > pcc_cv_step_config[i].curr_lim)) {
 			count++;
 			if (count >= 2) {
-				stepdown = true;
+				stepdown = 1;
 				count = 0;
-				pr_info("fg_cc_cv_step_check: stepdown");
+				pr_info("fg_cc_cv_step_check: stepdown triggered\n");
 			}
 			break;
 		}
 	}
 
 	finalFCC = get_effective_result(nopmi_chg->fcc_votable);
-	if (!stepdown || finalFCC <= pcc_cv_step_config[step_table_max-1].curr_lim) {
+	if (!stepdown || finalFCC <= pcc_cv_step_config[step_table_max - 1].curr_lim)
 		goto out;
-	}
-	if (finalFCC - pcc_cv_step_config[i].curr_lim < STEP_DOWN_CURR_MA) {
-		votFCC = pcc_cv_step_config[i].curr_lim;
-	} else{
-		votFCC = finalFCC - STEP_DOWN_CURR_MA;
-	}
+
+	votFCC = (finalFCC - pcc_cv_step_config[i].curr_lim < STEP_DOWN_CURR_MA) ? pcc_cv_step_config[i].curr_lim : finalFCC - STEP_DOWN_CURR_MA;
+
 	vote(nopmi_chg->fcc_votable, CC_CV_STEP_VOTER, true, votFCC);
-	pr_info("fg_cc_cv_step_check: i=%d, cccv_step vote=%d, stepdown=%d, finalFCC=%d",
+	pr_info("fg_cc_cv_step_check: i=%d, votFCC=%d, stepdown=%d, finalFCC=%d\n",
 			i, votFCC, stepdown, finalFCC);
+
 out:
 	schedule_delayed_work(&nopmi_chg->cvstep_monitor_work,
 			msecs_to_jiffies(NOPMI_CHG_CV_STEP_MONITOR_WORKFUNC_GAP));
-	pr_info("nopmi_cv_step_monitor_work: consistent scheduling");
+	pr_info("%s: consistent scheduling\n", __func__);
 }
 
 static int nopmi_chg_probe(struct platform_device *pdev)
@@ -1219,38 +1217,31 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	struct nopmi_chg *nopmi_chg = NULL;
 	struct power_supply *bms_psy = NULL;
 	struct power_supply *main_psy = NULL;
-	static int probe_cnt = 0;
 	int rc;
+	static int probe_cnt = 0;
 
-	if (probe_cnt == 0) {
-		pr_err("start\n");
+	pr_info("wsy nopmi_chg probe start, probe_cnt: %d\n", ++probe_cnt);
+
+	if (!pdev->dev.of_node)
+		return -ENODEV;
+
+	nopmi_chg = devm_kzalloc(&pdev->dev, sizeof(struct nopmi_chg), GFP_KERNEL);
+	if (!nopmi_chg) {
+		pr_err("%s: Failed to allocate memory\n", __func__);
+		return -ENOMEM;
 	}
-	probe_cnt++;
 
 	bms_psy = power_supply_get_by_name("bms");
 	if (IS_ERR_OR_NULL(bms_psy)) {
+		pr_err("%s: get bms psy fail, defer probe\n", __func__);
 		return -EPROBE_DEFER;
 	}
 
 	main_psy = power_supply_get_by_name("bbc");
 	if (IS_ERR_OR_NULL(main_psy)) {
-		if (bms_psy)
-			power_supply_put(bms_psy);
+		pr_err("%s: get main psy fail, defer probe\n", __func__);
+		power_supply_put(bms_psy);
 		return -EPROBE_DEFER;
-	}
-
-	if (!pdev->dev.of_node)
-		return -ENODEV;
-	if (pdev->dev.of_node) {
-		nopmi_chg = devm_kzalloc(&pdev->dev, sizeof(struct nopmi_chg), GFP_KERNEL);
-		if (!nopmi_chg) {
-			pr_err("Failed to allocate memory\n");
-			return -ENOMEM;
-		}
-	}
-	if (!nopmi_chg) {
-		pr_err("No platform data found\n");
-		return -EINVAL;
 	}
 
 	nopmi_chg->dev = &pdev->dev;
@@ -1259,26 +1250,25 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 
 	rc = nopmi_parse_dt(nopmi_chg);
 	if (rc < 0) {
-		pr_err("Couldn't parse device tree, rc=%d\n", rc);
-		goto err_free;
+		pr_err("%s: Couldn't parse device tree, rc=%d\n", __func__, rc);
+		goto cleanup;
 	}
-
-	nopmi_chg->bms_psy = bms_psy;
-	nopmi_chg->main_psy = main_psy;
 
 	rc = nopmi_init_batt_psy(nopmi_chg);
 	if (rc < 0) {
-		pr_err("Couldn't initialize batt psy, rc=%d\n", rc);
+		pr_err("%s: Couldn't initialize batt psy, rc=%d\n", __func__, rc);
 		goto cleanup;
 	}
 
 	rc = nopmi_init_usb_psy(nopmi_chg);
 	if (rc < 0) {
-		pr_err("Couldn't initialize usb psy, rc=%d\n", rc);
+		pr_err("%s: Couldn't initialize usb psy, rc=%d\n", __func__, rc);
 		goto cleanup;
 	}
 
-	nopmi_chg_jeita_init(&nopmi_chg->jeita_ctl);
+	nopmi_chg->bms_psy = bms_psy;
+	nopmi_chg->main_psy = main_psy;
+
 	INIT_DELAYED_WORK(&nopmi_chg->nopmi_chg_work, nopmi_chg_workfunc);
 	INIT_DELAYED_WORK(&nopmi_chg->cvstep_monitor_work, nopmi_cv_step_monitor_work);
 //2021.09.21 wsy edit remove vote to jeita
@@ -1286,22 +1276,25 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	nopmi_chg->fcc_votable = find_votable("FCC");
 	nopmi_chg->fv_votable = find_votable("FV");
 	nopmi_chg->usb_icl_votable = find_votable("USB_ICL");
+	nopmi_chg_jeita_init(&nopmi_chg->jeita_ctl);
 #endif
 	schedule_delayed_work(&nopmi_chg->nopmi_chg_work,
 			msecs_to_jiffies(NOPMI_CHG_WORKFUNC_FIRST_GAP));
-	g_nopmi_chg = nopmi_chg;
 	if ((NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type()))
-		device_init_wakeup(g_nopmi_chg->dev, true);
+		device_init_wakeup(nopmi_chg->dev, true);
+
+	g_nopmi_chg = nopmi_chg;
 
 	pr_info("wsy nopmi_chg probe end\n");
 	return 0;
 
 cleanup:
-	pr_err("nopmi_chg probe fail\n");
-err_free:
-	devm_kfree(&pdev->dev,nopmi_chg);
+	pr_err("wsy nopmi_chg probe fail\n");
+	//devm_kfree(&pdev->dev,nopmi_chg);
+	power_supply_put(bms_psy);
+	power_supply_put(main_psy);
 	return rc;
 }
 
@@ -1309,10 +1302,24 @@ static int nopmi_chg_remove(struct platform_device *pdev)
 {
 	struct nopmi_chg *nopmi_chg = platform_get_drvdata(pdev);
 
+	if (!nopmi_chg)
+		return 0;
+
+	cancel_delayed_work_sync(&nopmi_chg->nopmi_chg_work);
+	cancel_delayed_work_sync(&nopmi_chg->cvstep_monitor_work);
 	nopmi_chg_jeita_deinit(&nopmi_chg->jeita_ctl);
-	power_supply_put(nopmi_chg->bms_psy);
-	power_supply_put(nopmi_chg->main_psy);
-	devm_kfree(&pdev->dev,nopmi_chg);
+
+	if (nopmi_chg->bms_psy)
+		power_supply_put(nopmi_chg->bms_psy);
+	if (nopmi_chg->main_psy)
+		power_supply_put(nopmi_chg->main_psy);
+	if ((NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) ||
+			(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
+			(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type()))
+		device_init_wakeup(nopmi_chg->dev, false);
+
+	g_nopmi_chg = NULL;
+	platform_set_drvdata(pdev, NULL);
 
 	return 0;
 }
@@ -1346,10 +1353,9 @@ static void __exit nopmi_chg_exit(void)
 	platform_driver_unregister(&nopmi_chg_driver);
 }
 
-late_initcall_sync(nopmi_chg_init);
+module_init(nopmi_chg_init);
 module_exit(nopmi_chg_exit);
 
-MODULE_SOFTDEP("pre: bq2589x_charger sm5602_fg ");
 MODULE_AUTHOR("WingTech Inc.");
 MODULE_DESCRIPTION("battery driver");
 MODULE_LICENSE("GPL");

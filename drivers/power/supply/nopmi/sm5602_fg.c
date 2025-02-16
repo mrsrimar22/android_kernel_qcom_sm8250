@@ -1417,7 +1417,7 @@ static int fg_get_property(struct power_supply *psy,
 			val->intval = 1;
 		break;*/
 	default:
-		pr_notice("wsy default err fg_get_property, psp=%d\n", psp);
+		pr_info("wsy default err fg_get_property, psp=%d\n", psp);
 		return -EINVAL;
 	}
 
@@ -3395,6 +3395,9 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 	sm->batt_curr	= -ENODATA;
 	sm->fake_soc	= -EINVAL;
 	sm->fake_temp	= -EINVAL;
+	sm->param.batt_ma	= -ENODATA;
+	sm->param.batt_raw_soc	= -ENODATA;
+	sm->param.batt_soc	= -EINVAL;
 #ifdef CONFIG_BATT_VERIFY_BY_DS28E16
 	sm->max_verify_psy = power_supply_get_by_name("batt_verify");
 	if (!sm->max_verify_psy) {
@@ -3428,8 +3431,6 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 	}
 
 	fg_set_fastcharge_mode(sm, false);
-
-	sm->param.batt_soc = -EINVAL;
 
 	INIT_DELAYED_WORK(&sm->monitor_work, fg_monitor_workfunc);
 	//INIT_DELAYED_WORK(&sm->soc_monitor_work, soc_monitor_work);

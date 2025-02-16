@@ -27,8 +27,8 @@ int nopmi_chg_is_usb_present(struct power_supply *usb_psy)
 		pr_err("couldn't read usb_present property, ret=%d\n", ret);
 		return -EINVAL;
 	}
-	usb_present = prop.intval;
 
+	usb_present = prop.intval;
 	return usb_present;
 }
 
@@ -41,9 +41,9 @@ char nopmi_set_charger_ic_type(NOPMI_CHARGER_IC_TYPE nopmi_type)
 	} else {
 		ret = -ENODEV;
 	}
+
 	pr_info("2012.09.04 wsy %s: start nopmi_type=%d, nopmi_charger_ic=%d\n", __func__,
 			nopmi_type, nopmi_charger_ic);
-
 	return ret;
 }
 
@@ -144,13 +144,12 @@ int nopmi_get_quick_charge_type(struct power_supply *usb_psy)
 		is_single_flash = false;
 	}
 
-	if (NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) {
+	if (NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type())
 		pd_verifed = g_usbc_data->verifed;
-	} else if (NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) {
+	else if (NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type())
 		pd_verifed = adapter_dev_get_pd_verified();
-	} else {
+	else
 		pd_verifed = 1;
-	}
 
 	if ((chg_type == POWER_SUPPLY_TYPE_USB_PD) && pd_verifed) {
 		return QUICK_CHARGE_TURBE;
