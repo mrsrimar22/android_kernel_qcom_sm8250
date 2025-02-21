@@ -49,20 +49,22 @@ struct ds28e16_data {
 	bool batt_verified;
 };
 
-struct mutex ds_cmd_lock; // cmd Lock  2022_4_19 updated
+struct mutex ds_cmd_lock; // cmd Lock 2022_4_19 updated
 
 unsigned int attr_trytimes = 1;
 
 unsigned char session_seed[32] = {
-0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
+	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA
+};
 unsigned char S_secret[32] = {
-0x0C, 0x99, 0x2B, 0xD3, 0x95, 0xDB, 0xA0, 0xB4,
-0xEF, 0x07, 0xB3, 0xD8, 0x75, 0xF3, 0xC7, 0xAE,
-0xDA, 0xC4, 0x41, 0x2F, 0x48, 0x93, 0xB5, 0xD9,
-0xE1, 0xE5, 0x4B, 0x20, 0x9B, 0xF3, 0x77, 0x39};
+	0x0C, 0x99, 0x2B, 0xD3, 0x95, 0xDB, 0xA0, 0xB4,
+	0xEF, 0x07, 0xB3, 0xD8, 0x75, 0xF3, 0xC7, 0xAE,
+	0xDA, 0xC4, 0x41, 0x2F, 0x48, 0x93, 0xB5, 0xD9,
+	0xE1, 0xE5, 0x4B, 0x20, 0x9B, 0xF3, 0x77, 0x39
+};
 unsigned char challenge[32] = {0x00};
 int auth_ANON = 1;
 int auth_BDCONST = 1;
@@ -115,11 +117,11 @@ short Read_RomID(unsigned char *RomID)
 	unsigned char crc = 0x00;
 
 	ds_dbg("getian--RomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	RomID[0], RomID[1], RomID[2], RomID[3],
-	RomID[4], RomID[5], RomID[6], RomID[7]);
+			RomID[0], RomID[1], RomID[2], RomID[3],
+			RomID[4], RomID[5], RomID[6], RomID[7]);
 	ds_dbg("getian--mi_romid = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	mi_romid[0], mi_romid[1], mi_romid[2], mi_romid[3],
-	mi_romid[4], mi_romid[5], mi_romid[6], mi_romid[7]);
+			mi_romid[0], mi_romid[1], mi_romid[2], mi_romid[3],
+			mi_romid[4], mi_romid[5], mi_romid[6], mi_romid[7]);
 	if ((flag_mi_romid == 2) && (mi_romid[0] != 0x1f)) {
 		// 2021_12_1 Updated
 		memcpy(RomID, mi_romid, 8);
@@ -143,27 +145,27 @@ short Read_RomID(unsigned char *RomID)
 		RomID[i] = read_byte();
 
 	ds_dbg("RomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	RomID[0], RomID[1], RomID[2], RomID[3],
-	RomID[4], RomID[5], RomID[6], RomID[7]);
+			RomID[0], RomID[1], RomID[2], RomID[3],
+			RomID[4], RomID[5], RomID[6], RomID[7]);
 
 	crc = crc_low_first(RomID, 7);
 	ds_dbg("crc_low_first = %02x\n", crc);
 
 	if (crc == RomID[7]) {
 		memcpy(mi_romid, RomID, 8);
-		if ((mi_romid[0] == FAMILY_CODE)
-			&& (mi_romid[6] == CUSTOM_ID_MSB)
-			&& ((mi_romid[5] & 0xf0) == CUSTOM_ID_LSB))
+		if ((mi_romid[0] == FAMILY_CODE) &&
+				(mi_romid[6] == CUSTOM_ID_MSB) &&
+				((mi_romid[5] & 0xf0) == CUSTOM_ID_LSB))
 			flag_mi_romid = 2;
 		else
 			flag_mi_romid = 1;
 
 		ds_dbg("getian--RomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-		RomID[0], RomID[1], RomID[2], RomID[3],
-		RomID[4], RomID[5], RomID[6], RomID[7]);
+				RomID[0], RomID[1], RomID[2], RomID[3],
+				RomID[4], RomID[5], RomID[6], RomID[7]);
 		ds_dbg("getian--mi_romid = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-		mi_romid[0], mi_romid[1], mi_romid[2], mi_romid[3],
-		mi_romid[4], mi_romid[5], mi_romid[6], mi_romid[7]);
+				mi_romid[0], mi_romid[1], mi_romid[2], mi_romid[3],
+				mi_romid[4], mi_romid[5], mi_romid[6], mi_romid[7]);
 		ds_log("getian---Read_RomID22\n");
 		return DS_TRUE;
 	} else {
@@ -307,11 +309,11 @@ int DS28E16_cmd_readStatus(unsigned char *data)
 	int read_len = 7;
 
 	ds_dbg("getian--data = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	data[0], data[1], data[2], data[3],
-	data[4], data[5], data[6], data[7]);
+			data[0], data[1], data[2], data[3],
+			data[4], data[5], data[6], data[7]);
 	ds_dbg("getian--mi_status = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	mi_status[0], mi_status[1], mi_status[2], mi_status[3],
-	mi_status[4], mi_status[5], mi_status[6], mi_status[7]);
+			mi_status[0], mi_status[1], mi_status[2], mi_status[3],
+			mi_status[4], mi_status[5], mi_status[6], mi_status[7]);
 	if (flag_mi_status) {
 		memcpy(data, mi_status, 8);
 		ds_log("getian---DS28E16_cmd_readStatus00\n");
@@ -335,8 +337,8 @@ int DS28E16_cmd_readStatus(unsigned char *data)
 	write_buf[write_len++] = len_byte;
 	write_buf[write_len++] = CMD_READ_STATUS;
 
-	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_READ*tm,
-		read_buf, &read_len, write_len)) {
+	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_READ * tm,
+			read_buf, &read_len, write_len)) {
 		if (read_buf[0] == RESULT_SUCCESS) {
 			last_result_byte = read_buf[0];
 			memcpy(data, &read_buf[1], 8);
@@ -344,11 +346,11 @@ int DS28E16_cmd_readStatus(unsigned char *data)
 			memcpy(mi_status, data, 8);
 			MANID[0] = data[4];
 			ds_dbg("getian--data = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-			data[0], data[1], data[2], data[3],
-			data[4], data[5], data[6], data[7]);
+					data[0], data[1], data[2], data[3],
+					data[4], data[5], data[6], data[7]);
 			ds_dbg("getian--mi_status = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-			mi_status[0], mi_status[1], mi_status[2], mi_status[3],
-			mi_status[4], mi_status[5], mi_status[6], mi_status[7]);
+					mi_status[0], mi_status[1], mi_status[2], mi_status[3],
+					mi_status[4], mi_status[5], mi_status[6], mi_status[7]);
 			ds_log("getian---DS28E16_cmd_readStatus11\n");
 			return DS_TRUE;
 		}
@@ -382,7 +384,7 @@ void Virtual_cmd_readStatus(void)
 	read_byte();
 	read_byte();
 	write_byte(CMD_RELEASE_BYTE);
-	Delay_us(50*1000);
+	Delay_us(50 * 1000);
 
 	for (num = 0; num < 11; num++)
 		read_byte();
@@ -455,10 +457,10 @@ int DS28E16_cmd_readMemory(int pg, unsigned char *data)
 	write_buf[write_len++] = pagenum;
 
 	ds_dbg("DS28E16_cmd_readMemory write_buf:\n");
-	ds_dbg("%02x %02x %02x", write_buf[0], write_buf[1], write_buf[2]);
+	ds_dbg("%02x %02x %02x\n", write_buf[0], write_buf[1], write_buf[2]);
 
-	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_READ*tm,
-		read_buf, &read_len, write_len)) {
+	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_READ * tm,
+			read_buf, &read_len, write_len)) {
 		if (read_len == 33) {
 			last_result_byte = read_buf[0];
 			if (read_buf[0] == RESULT_SUCCESS) {
@@ -529,8 +531,8 @@ int DS28E16_cmd_writeMemory(int pg, unsigned char *data)
 	memcpy(&write_buf[write_len], data, 16);
 	write_len += 16;
 
-	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE*tm,
-		read_buf, &read_len, write_len)) {
+	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE * tm,
+			read_buf, &read_len, write_len)) {
 		if (read_len == 1) {
 			last_result_byte = read_buf[0];
 			if (read_buf[0] == RESULT_SUCCESS) {
@@ -585,7 +587,7 @@ int DS28E16_cmd_decrementCounter(void)
 	write_buf[write_len++] = CMD_DECREMENT_CNT;
 
 	if (DS28E16_standard_cmd_flow(write_buf, 50,
-		read_buf, &read_len, write_len)) {
+			read_buf, &read_len, write_len)) {
 		if (read_len == 1) {
 			last_result_byte = read_buf[0];
 			if (read_buf[0] == RESULT_SUCCESS)
@@ -637,8 +639,8 @@ int DS28E16_cmd_setPageProtection(int page, unsigned char prot)
 	write_buf[write_len++] = page & 0x03;
 	write_buf[write_len++] = prot & 0x03;
 
-	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE*tm,
-		read_buf, &read_len, write_len)) {
+	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE * tm,
+			read_buf, &read_len, write_len)) {
 		if (read_len == 1) {
 			last_result_byte = read_buf[0];
 			if (read_buf[0] == RESULT_SUCCESS)
@@ -680,7 +682,7 @@ int DS28E16_cmd_device_disable(int op, unsigned char *password)
 	write_len += 8;
 
 	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE,
-		read_buf, &read_len, write_len)) {
+			read_buf, &read_len, write_len)) {
 		if (read_len == 1) {
 			last_result_byte = read_buf[0];
 			if (read_buf[0] == RESULT_SUCCESS)
@@ -728,7 +730,7 @@ int DS28E16_cmd_computeReadPageAuthentication(int anon, int pg,
 	write_len += 32;
 
 	ds_dbg("computeReadPageAuthen:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			write_buf[0], write_buf[1], write_buf[2], write_buf[3],
 			write_buf[4], write_buf[5], write_buf[6], write_buf[7],
 			write_buf[8], write_buf[9], write_buf[10], write_buf[11],
@@ -740,30 +742,30 @@ int DS28E16_cmd_computeReadPageAuthentication(int anon, int pg,
 			write_buf[32], write_buf[33], write_buf[34]);
 
 	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE,
-		read_buf, &read_len, write_len)) {
+			read_buf, &read_len, write_len)) {
 		last_result_byte = read_buf[0];
 		if (read_buf[0] == RESULT_SUCCESS) {
 			ds_dbg("hmac read_buf:\n");
-			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-			read_buf[0], read_buf[1], read_buf[2], read_buf[3],
-			read_buf[4], read_buf[5], read_buf[6], read_buf[7],
-			read_buf[8], read_buf[9], read_buf[10], read_buf[11],
-			read_buf[12], read_buf[13], read_buf[14], read_buf[15],
-			read_buf[16], read_buf[17], read_buf[18], read_buf[19],
-			read_buf[20], read_buf[21], read_buf[22], read_buf[23],
-			read_buf[24], read_buf[25], read_buf[26], read_buf[27],
-			read_buf[28], read_buf[29], read_buf[30], read_buf[31], read_buf[32]);
+			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+					read_buf[0], read_buf[1], read_buf[2], read_buf[3],
+					read_buf[4], read_buf[5], read_buf[6], read_buf[7],
+					read_buf[8], read_buf[9], read_buf[10], read_buf[11],
+					read_buf[12], read_buf[13], read_buf[14], read_buf[15],
+					read_buf[16], read_buf[17], read_buf[18], read_buf[19],
+					read_buf[20], read_buf[21], read_buf[22], read_buf[23],
+					read_buf[24], read_buf[25], read_buf[26], read_buf[27],
+					read_buf[28], read_buf[29], read_buf[30], read_buf[31], read_buf[32]);
 			memcpy(hmac, &read_buf[1], 32);
 			ds_dbg("hmac:\n");
-			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-			hmac[0], hmac[1], hmac[2], hmac[3],
-			hmac[4], hmac[5], hmac[6], hmac[7],
-			hmac[8], hmac[9], hmac[10], hmac[11],
-			hmac[12], hmac[13], hmac[14], hmac[15],
-			hmac[16], hmac[17], hmac[18], hmac[19],
-			hmac[20], hmac[21], hmac[22], hmac[23],
-			hmac[24], hmac[25], hmac[26], hmac[27],
-			hmac[28], hmac[29], hmac[30], hmac[31]);
+			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+					hmac[0], hmac[1], hmac[2], hmac[3],
+					hmac[4], hmac[5], hmac[6], hmac[7],
+					hmac[8], hmac[9], hmac[10], hmac[11],
+					hmac[12], hmac[13], hmac[14], hmac[15],
+					hmac[16], hmac[17], hmac[18], hmac[19],
+					hmac[20], hmac[21], hmac[22], hmac[23],
+					hmac[24], hmac[25], hmac[26], hmac[27],
+					hmac[28], hmac[29], hmac[30], hmac[31]);
 			return DS_TRUE;
 		}
 	}
@@ -811,7 +813,7 @@ int DS28E16_cmd_computeS_Secret(int anon, int bdconst, int pg,
 	write_len += 32;
 
 	ds_dbg("computeS_Secret:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			write_buf[0], write_buf[1], write_buf[2], write_buf[3],
 			write_buf[4], write_buf[5], write_buf[6], write_buf[7],
 			write_buf[8], write_buf[9], write_buf[10], write_buf[11],
@@ -823,7 +825,7 @@ int DS28E16_cmd_computeS_Secret(int anon, int bdconst, int pg,
 			write_buf[32], write_buf[33], write_buf[34]);
 
 	if (DS28E16_standard_cmd_flow(write_buf, DELAY_DS28E16_EE_WRITE,
-		read_buf, &read_len, write_len)) {
+			read_buf, &read_len, write_len)) {
 		last_result_byte = read_buf[0];
 		if (read_buf[0] == RESULT_SUCCESS)
 			return DS_TRUE;
@@ -862,26 +864,26 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 
 	// DS28E16 calculate its session secret
 	flag = DS28E16_cmd_computeS_Secret_retry(anon,
-		bdconst, S_Secret_PageNum, Secret_Seeds);
+			bdconst, S_Secret_PageNum, Secret_Seeds);
 	if (flag == DS_FALSE) {
-		ds_err("DS28E16_cmd_computeS_Secret error");
+		ds_err("DS28E16_cmd_computeS_Secret error\n");
 		ow_reset();
 		return ERROR_S_SECRET;
 	}
 
 	// DS28E16 compute its MAC based on above sessio secret
 	flag = DS28E16_cmd_computeReadPageAuthentication_retry(anon,
-		PageNum, Challenge, MAC_Read_Value);
+			PageNum, Challenge, MAC_Read_Value);
 	if (flag == DS_FALSE) {
-		ds_err("DS28E16_cmd_computeReadPageAuthentication error");
+		ds_err("DS28E16_cmd_computeReadPageAuthentication error\n");
 		ow_reset();
 		return ERROR_COMPUTE_MAC;
 	}
 
-	ds_dbg("%02x %02x %02x %02x", anon, bdconst, S_Secret_PageNum, PageNum);
+	ds_dbg("%02x %02x %02x %02x\n", anon, bdconst, S_Secret_PageNum, PageNum);
 
 	ds_dbg("Seeds:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			Secret_Seeds[0], Secret_Seeds[1], Secret_Seeds[2], Secret_Seeds[3],
 			Secret_Seeds[4], Secret_Seeds[5], Secret_Seeds[6], Secret_Seeds[7],
 			Secret_Seeds[8], Secret_Seeds[9], Secret_Seeds[10], Secret_Seeds[11],
@@ -892,7 +894,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 			Secret_Seeds[28], Secret_Seeds[29], Secret_Seeds[30], Secret_Seeds[31]);
 
 	ds_dbg("S_Secret:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			S_Secret[0], S_Secret[1], S_Secret[2], S_Secret[3],
 			S_Secret[4], S_Secret[5], S_Secret[6], S_Secret[7],
 			S_Secret[8], S_Secret[9], S_Secret[10], S_Secret[11],
@@ -903,7 +905,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 			S_Secret[28], S_Secret[29], S_Secret[30], S_Secret[31]);
 
 	ds_dbg("Challenge:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			Challenge[0], Challenge[1], Challenge[2], Challenge[3],
 			Challenge[4], Challenge[5], Challenge[6], Challenge[7],
 			Challenge[8], Challenge[9], Challenge[10], Challenge[11],
@@ -914,7 +916,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 			Challenge[28], Challenge[29], Challenge[30], Challenge[31]);
 
 	ds_dbg("MAC_Read_Value:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			MAC_Read_Value[0], MAC_Read_Value[1], MAC_Read_Value[2], MAC_Read_Value[3],
 			MAC_Read_Value[4], MAC_Read_Value[5], MAC_Read_Value[6], MAC_Read_Value[7],
 			MAC_Read_Value[8], MAC_Read_Value[9], MAC_Read_Value[10], MAC_Read_Value[11],
@@ -927,7 +929,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 	// read the page data
 	flag = ds28el16_get_page_data_retry(PageNum, PageData);
 	if (flag != DS_TRUE) {
-		ds_err("DS28E16_cmd_readMemory error");
+		ds_err("DS28E16_cmd_readMemory error\n");
 		ow_reset();
 		return ERROR_R_PAGEDATA;
 	}
@@ -962,7 +964,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 	sha3_256_hmac(S_Secret, 32, MAC_Computer_Datainput, msg_len, CAL_MAC);
 
 	ds_dbg("host data:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			MAC_Computer_Datainput[0], MAC_Computer_Datainput[1], MAC_Computer_Datainput[2],
 			MAC_Computer_Datainput[3], MAC_Computer_Datainput[4], MAC_Computer_Datainput[5],
 			MAC_Computer_Datainput[6], MAC_Computer_Datainput[7], MAC_Computer_Datainput[8],
@@ -973,7 +975,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 			MAC_Computer_Datainput[21], MAC_Computer_Datainput[22], MAC_Computer_Datainput[23],
 			MAC_Computer_Datainput[24], MAC_Computer_Datainput[25], MAC_Computer_Datainput[26],
 			MAC_Computer_Datainput[27], MAC_Computer_Datainput[28], MAC_Computer_Datainput[29],
-			MAC_Computer_Datainput[30], MAC_Computer_Datainput[31],	MAC_Computer_Datainput[32],
+			MAC_Computer_Datainput[30], MAC_Computer_Datainput[31], MAC_Computer_Datainput[32],
 			MAC_Computer_Datainput[33], MAC_Computer_Datainput[34], MAC_Computer_Datainput[35],
 			MAC_Computer_Datainput[36], MAC_Computer_Datainput[37], MAC_Computer_Datainput[38],
 			MAC_Computer_Datainput[39], MAC_Computer_Datainput[40], MAC_Computer_Datainput[41],
@@ -992,7 +994,7 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 			MAC_Computer_Datainput[78], MAC_Computer_Datainput[79]);
 
 	ds_dbg("host mac:\n");
-	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
 			CAL_MAC[0], CAL_MAC[1], CAL_MAC[2], CAL_MAC[3],
 			CAL_MAC[4], CAL_MAC[5], CAL_MAC[6], CAL_MAC[7],
 			CAL_MAC[8], CAL_MAC[9], CAL_MAC[10], CAL_MAC[11],
@@ -1022,7 +1024,6 @@ int AuthenticateDS28E16(int anon, int bdconst, int S_Secret_PageNum,
 	}
 }
 
-
 // retry interface start //
 static int ds28el16_Read_RomID_retry(unsigned char *RomID)
 {
@@ -1047,6 +1048,7 @@ static int ds28el16_Read_RomID_retry(unsigned char *RomID)
 		}
 		//}
 	}
+
 	ds_log("getian---ds28el16_Read_RomID_retry11\n");
 	return DS_FALSE;
 }
@@ -1092,25 +1094,25 @@ static int ds28el16_get_page_data_retry(int page, unsigned char *data)
 		if (DS28E16_cmd_readMemory(page, data) == DS_TRUE) {
 			ds_dbg("page number is %d\n", page);
 			ds_dbg("page data:\n");
-			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-			data[0], data[1], data[2], data[3],
-			data[4], data[5], data[6], data[7],
-			data[8], data[9], data[10], data[11],
-			data[12], data[13], data[14], data[15]);
+			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+					data[0], data[1], data[2], data[3],
+					data[4], data[5], data[6], data[7],
+					data[8], data[9], data[10], data[11],
+					data[12], data[13], data[14], data[15]);
 			ds_dbg("flag_mi_page0_data is %d\n", flag_mi_page0_data);
 			ds_dbg("mi_page0_data data:\n");
-			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-			mi_page0_data[0], mi_page0_data[1], mi_page0_data[2], mi_page0_data[3],
-			mi_page0_data[4], mi_page0_data[5], mi_page0_data[6], mi_page0_data[7],
-			mi_page0_data[8], mi_page0_data[9], mi_page0_data[10], mi_page0_data[11],
-			mi_page0_data[12], mi_page0_data[13], mi_page0_data[14], mi_page0_data[15]);
+			ds_dbg("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+					mi_page0_data[0], mi_page0_data[1], mi_page0_data[2], mi_page0_data[3],
+					mi_page0_data[4], mi_page0_data[5], mi_page0_data[6], mi_page0_data[7],
+					mi_page0_data[8], mi_page0_data[9], mi_page0_data[10], mi_page0_data[11],
+					mi_page0_data[12], mi_page0_data[13], mi_page0_data[14], mi_page0_data[15]);
 			ds_dbg("flag_mi_page1_data is %d\n", flag_mi_page1_data);
 			ds_dbg("mi_page1_data data:\n");
-			ds_dbg("%%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-			mi_page1_data[0], mi_page1_data[1], mi_page1_data[2], mi_page1_data[3],
-			mi_page1_data[4], mi_page1_data[5], mi_page1_data[6], mi_page1_data[7],
-			mi_page1_data[8], mi_page1_data[9], mi_page1_data[10], mi_page1_data[11],
-			mi_page1_data[12], mi_page1_data[13], mi_page1_data[14], mi_page1_data[15]);
+			ds_dbg("%%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+					mi_page1_data[0], mi_page1_data[1], mi_page1_data[2], mi_page1_data[3],
+					mi_page1_data[4], mi_page1_data[5], mi_page1_data[6], mi_page1_data[7],
+					mi_page1_data[8], mi_page1_data[9], mi_page1_data[10], mi_page1_data[11],
+					mi_page1_data[12], mi_page1_data[13], mi_page1_data[14], mi_page1_data[15]);
 			ds_dbg("flag_mi_counter is %d\n", flag_mi_counter);
 			return DS_TRUE;
 		}
@@ -1218,9 +1220,9 @@ static int verify_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CHIP_OK:
 		ds_log("getian---POWER_SUPPLY_PROP_CHIP_OK\n");
 		ret = ds28el16_Read_RomID_retry(mi_romid);
-		if ((mi_romid[0] == FAMILY_CODE)
-			&& (mi_romid[6] == CUSTOM_ID_MSB)
-			&& ((mi_romid[5] & 0xf0) == CUSTOM_ID_LSB))
+		if ((mi_romid[0] == FAMILY_CODE) &&
+				(mi_romid[6] == CUSTOM_ID_MSB) &&
+				((mi_romid[5] & 0xf0) == CUSTOM_ID_LSB))
 			val->intval = true;
 		else
 			val->intval = false;
@@ -1338,10 +1340,9 @@ static int verify_psy_register(struct ds28e16_data *ds)
 	verify_psy_cfg.drv_data = ds;
 	verify_psy_cfg.of_node = ds->dev->of_node;
 	verify_psy_cfg.num_supplicants = 0;
-	ds->verify_psy = devm_power_supply_register(ds->dev,
-			&ds->verify_psy_d, &verify_psy_cfg);
+	ds->verify_psy = devm_power_supply_register(ds->dev, &ds->verify_psy_d, &verify_psy_cfg);
 	if (IS_ERR(ds->verify_psy)) {
-		ds_err("Failed to register verify_psy");
+		ds_err("Failed to register verify_psy\n");
 		return PTR_ERR(ds->verify_psy);
 	}
 
@@ -1383,25 +1384,25 @@ static ssize_t ds28e16_ds_Auth_Result_status_read(struct device *dev,
 			pagenumber, challenge, session_seed, S_secret);
 	if (result == ERROR_R_STATUS)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: ERROR_R_STATUS!\n");
+				"Authenticate failed: ERROR_R_STATUS!\n");
 	else if (result == ERROR_UNMATCH_MAC)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: MAC is not match!\n");
+				"Authenticate failed: MAC is not match!\n");
 	else if (result == ERROR_R_ROMID)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: ERROR_R_ROMID!\n");
+				"Authenticate failed: ERROR_R_ROMID!\n");
 	else if (result == ERROR_COMPUTE_MAC)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: ERROR_COMPUTE_MAC!\n");
+				"Authenticate failed: ERROR_COMPUTE_MAC!\n");
 	else if (result == ERROR_S_SECRET)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: ERROR_S_SECRET!\n");
+				"Authenticate failed: ERROR_S_SECRET!\n");
 	else if (result == DS_TRUE)
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate success!!!\n");
+				"Authenticate success!!!\n");
 	else
 		return scnprintf(buf, PAGE_SIZE,
-			"Authenticate failed: other reason.\n");
+				"Authenticate failed: other reason.\n");
 }
 
 static ssize_t ds28e16_ds_romid_status_read(struct device *dev,
@@ -1422,15 +1423,14 @@ static ssize_t ds28e16_ds_romid_status_read(struct device *dev,
 			ds_log("Read_RomID fail!\n");
 		}
 		ds_dbg("RomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-		RomID[0], RomID[1], RomID[2], RomID[3],
-		RomID[4], RomID[5], RomID[6], RomID[7]);
+				RomID[0], RomID[1], RomID[2], RomID[3],
+				RomID[4], RomID[5], RomID[6], RomID[7]);
 		Delay_us(1000);
 	}
 	ds_log("test done\nsuccess time: %d\n", count);
-	return scnprintf(buf, PAGE_SIZE,
-	"Success = %d\nRomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	count, RomID[0], RomID[1], RomID[2], RomID[3],
-	RomID[4], RomID[5], RomID[6], RomID[7]);
+	return scnprintf(buf, PAGE_SIZE, "Success = %d\nRomID = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n", count,
+			RomID[0], RomID[1], RomID[2], RomID[3],
+			RomID[4], RomID[5], RomID[6], RomID[7]);
 }
 
 static ssize_t ds28e16_ds_pagenumber_status_read(struct device *dev,
@@ -1475,19 +1475,18 @@ static ssize_t ds28e16_ds_pagedata_status_read(struct device *dev,
 			ds_log("DS28E16_cmd_readMemory fail!\n");
 		}
 		ds_dbg("pagedata = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-		pagedata[0], pagedata[1], pagedata[2], pagedata[3],
-		pagedata[4], pagedata[5], pagedata[6], pagedata[7],
-		pagedata[8], pagedata[9], pagedata[10], pagedata[11],
-		pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
+				pagedata[0], pagedata[1], pagedata[2], pagedata[3],
+				pagedata[4], pagedata[5], pagedata[6], pagedata[7],
+				pagedata[8], pagedata[9], pagedata[10], pagedata[11],
+				pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
 		Delay_us(1000);
 	}
 	ds_log("test done\nsuccess time: %d\n", count);
-	return scnprintf(buf, PAGE_SIZE,
-	"Success = %d\npagedata = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	count, pagedata[0], pagedata[1], pagedata[2], pagedata[3],
-	pagedata[4], pagedata[5], pagedata[6], pagedata[7],
-	pagedata[8], pagedata[9], pagedata[10], pagedata[11],
-	pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
+	return scnprintf(buf, PAGE_SIZE, "Success = %d\npagedata = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n", count,
+			pagedata[0], pagedata[1], pagedata[2], pagedata[3],
+			pagedata[4], pagedata[5], pagedata[6], pagedata[7],
+			pagedata[8], pagedata[9], pagedata[10], pagedata[11],
+			pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
 }
 
 static ssize_t ds28e16_ds_pagedata_store(struct device *dev,
@@ -1498,17 +1497,17 @@ static ssize_t ds28e16_ds_pagedata_store(struct device *dev,
 	unsigned char pagedata[16] = {0x00};
 
 	if (sscanf(buf, "%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx",
-	&pagedata[0], &pagedata[1], &pagedata[2], &pagedata[3],
-	&pagedata[4], &pagedata[5], &pagedata[6], &pagedata[7],
-	&pagedata[8], &pagedata[9], &pagedata[10], &pagedata[11],
-	&pagedata[12], &pagedata[13], &pagedata[14], &pagedata[15]) != 16)
+			&pagedata[0], &pagedata[1], &pagedata[2], &pagedata[3],
+			&pagedata[4], &pagedata[5], &pagedata[6], &pagedata[7],
+			&pagedata[8], &pagedata[9], &pagedata[10], &pagedata[11],
+			&pagedata[12], &pagedata[13], &pagedata[14], &pagedata[15]) != 16)
 		return -EINVAL;
 
 	ds_dbg("new data = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	pagedata[0], pagedata[1], pagedata[2], pagedata[3],
-	pagedata[4], pagedata[5], pagedata[6], pagedata[7],
-	pagedata[8], pagedata[9], pagedata[10], pagedata[11],
-	pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
+			pagedata[0], pagedata[1], pagedata[2], pagedata[3],
+			pagedata[4], pagedata[5], pagedata[6], pagedata[7],
+			pagedata[8], pagedata[9], pagedata[10], pagedata[11],
+			pagedata[12], pagedata[13], pagedata[14], pagedata[15]);
 
 	result = DS28E16_cmd_writeMemory(pagenumber, pagedata);
 	if (result == DS_TRUE)
@@ -1547,16 +1546,15 @@ static ssize_t ds28e16_ds_session_seed_status_read(struct device *dev,
 						   struct device_attribute *attr,
 						   char *buf)
 {
-	return scnprintf(buf, PAGE_SIZE,
-	"%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
-	session_seed[0], session_seed[1], session_seed[2], session_seed[3],
-	session_seed[4], session_seed[5], session_seed[6], session_seed[7],
-	session_seed[8], session_seed[9], session_seed[10], session_seed[11],
-	session_seed[12], session_seed[13], session_seed[14], session_seed[15],
-	session_seed[16], session_seed[17], session_seed[18], session_seed[19],
-	session_seed[20], session_seed[21], session_seed[22], session_seed[23],
-	session_seed[24], session_seed[25], session_seed[26], session_seed[27],
-	session_seed[28], session_seed[29], session_seed[30], session_seed[31]);
+	return scnprintf(buf, PAGE_SIZE, "%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
+			session_seed[0], session_seed[1], session_seed[2], session_seed[3],
+			session_seed[4], session_seed[5], session_seed[6], session_seed[7],
+			session_seed[8], session_seed[9], session_seed[10], session_seed[11],
+			session_seed[12], session_seed[13], session_seed[14], session_seed[15],
+			session_seed[16], session_seed[17], session_seed[18], session_seed[19],
+			session_seed[20], session_seed[21], session_seed[22], session_seed[23],
+			session_seed[24], session_seed[25], session_seed[26], session_seed[27],
+			session_seed[28], session_seed[29], session_seed[30], session_seed[31]);
 }
 
 static ssize_t ds28e16_ds_session_seed_store(struct device *dev,
@@ -1564,17 +1562,17 @@ static ssize_t ds28e16_ds_session_seed_store(struct device *dev,
 					     const char *buf, size_t count)
 {
 	if (sscanf(buf, "%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx",
-		&session_seed[0], &session_seed[1], &session_seed[2],
-		&session_seed[3], &session_seed[4], &session_seed[5],
-		&session_seed[6], &session_seed[7], &session_seed[8],
-		&session_seed[9], &session_seed[10], &session_seed[11],
-		&session_seed[12], &session_seed[13], &session_seed[14],
-		&session_seed[15], &session_seed[16], &session_seed[17],
-		&session_seed[18], &session_seed[19], &session_seed[20],
-		&session_seed[21], &session_seed[22], &session_seed[23],
-		&session_seed[24], &session_seed[25], &session_seed[26],
-		&session_seed[27], &session_seed[28], &session_seed[29],
-		&session_seed[30], &session_seed[31]) != 32)
+			&session_seed[0], &session_seed[1], &session_seed[2],
+			&session_seed[3], &session_seed[4], &session_seed[5],
+			&session_seed[6], &session_seed[7], &session_seed[8],
+			&session_seed[9], &session_seed[10], &session_seed[11],
+			&session_seed[12], &session_seed[13], &session_seed[14],
+			&session_seed[15], &session_seed[16], &session_seed[17],
+			&session_seed[18], &session_seed[19], &session_seed[20],
+			&session_seed[21], &session_seed[22], &session_seed[23],
+			&session_seed[24], &session_seed[25], &session_seed[26],
+			&session_seed[27], &session_seed[28], &session_seed[29],
+			&session_seed[30], &session_seed[31]) != 32)
 		return -EINVAL;
 
 	return count;
@@ -1584,16 +1582,15 @@ static ssize_t ds28e16_ds_challenge_status_read(struct device *dev,
 						struct device_attribute *attr,
 						char *buf)
 {
-	return scnprintf(buf, PAGE_SIZE,
-	"%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
-	challenge[0], challenge[1], challenge[2], challenge[3],
-	challenge[4], challenge[5], challenge[6], challenge[7],
-	challenge[8], challenge[9], challenge[10], challenge[11],
-	challenge[12], challenge[13], challenge[14], challenge[15],
-	challenge[16], challenge[17], challenge[18], challenge[19],
-	challenge[20], challenge[21], challenge[22], challenge[23],
-	challenge[24], challenge[25], challenge[26], challenge[27],
-	challenge[28], challenge[29], challenge[30], challenge[31]);
+	return scnprintf(buf, PAGE_SIZE, "%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
+			challenge[0], challenge[1], challenge[2], challenge[3],
+			challenge[4], challenge[5], challenge[6], challenge[7],
+			challenge[8], challenge[9], challenge[10], challenge[11],
+			challenge[12], challenge[13], challenge[14], challenge[15],
+			challenge[16], challenge[17], challenge[18], challenge[19],
+			challenge[20], challenge[21], challenge[22], challenge[23],
+			challenge[24], challenge[25], challenge[26], challenge[27],
+			challenge[28], challenge[29], challenge[30], challenge[31]);
 }
 
 static ssize_t ds28e16_ds_challenge_store(struct device *dev,
@@ -1601,14 +1598,14 @@ static ssize_t ds28e16_ds_challenge_store(struct device *dev,
 					  const char *buf, size_t count)
 {
 	if (sscanf(buf, "%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx",
-		&challenge[0], &challenge[1], &challenge[2], &challenge[3],
-		&challenge[4], &challenge[5], &challenge[6], &challenge[7],
-		&challenge[8], &challenge[9], &challenge[10], &challenge[11],
-		&challenge[12], &challenge[13], &challenge[14], &challenge[15],
-		&challenge[16], &challenge[17], &challenge[18], &challenge[19],
-		&challenge[20], &challenge[21], &challenge[22], &challenge[23],
-		&challenge[24], &challenge[25], &challenge[26], &challenge[27],
-		&challenge[28], &challenge[29], &challenge[30], &challenge[31]) != 32)
+			&challenge[0], &challenge[1], &challenge[2], &challenge[3],
+			&challenge[4], &challenge[5], &challenge[6], &challenge[7],
+			&challenge[8], &challenge[9], &challenge[10], &challenge[11],
+			&challenge[12], &challenge[13], &challenge[14], &challenge[15],
+			&challenge[16], &challenge[17], &challenge[18], &challenge[19],
+			&challenge[20], &challenge[21], &challenge[22], &challenge[23],
+			&challenge[24], &challenge[25], &challenge[26], &challenge[27],
+			&challenge[28], &challenge[29], &challenge[30], &challenge[31]) != 32)
 		return -EINVAL;
 
 	return count;
@@ -1618,16 +1615,15 @@ static ssize_t ds28e16_ds_S_secret_status_read(struct device *dev,
 					       struct device_attribute *attr,
 					       char *buf)
 {
-	return scnprintf(buf, PAGE_SIZE,
-	"%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
-	S_secret[0], S_secret[1], S_secret[2], S_secret[3],
-	S_secret[4], S_secret[5], S_secret[6], S_secret[7],
-	S_secret[8], S_secret[9], S_secret[10], S_secret[11],
-	S_secret[12], S_secret[13], S_secret[14], S_secret[15],
-	S_secret[16], S_secret[17], S_secret[18], S_secret[19],
-	S_secret[20], S_secret[21], S_secret[22], S_secret[23],
-	S_secret[24], S_secret[25], S_secret[26], S_secret[27],
-	S_secret[28], S_secret[29], S_secret[30], S_secret[31]);
+	return scnprintf(buf, PAGE_SIZE, "%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,\n",
+			S_secret[0], S_secret[1], S_secret[2], S_secret[3],
+			S_secret[4], S_secret[5], S_secret[6], S_secret[7],
+			S_secret[8], S_secret[9], S_secret[10], S_secret[11],
+			S_secret[12], S_secret[13], S_secret[14], S_secret[15],
+			S_secret[16], S_secret[17], S_secret[18], S_secret[19],
+			S_secret[20], S_secret[21], S_secret[22], S_secret[23],
+			S_secret[24], S_secret[25], S_secret[26], S_secret[27],
+			S_secret[28], S_secret[29], S_secret[30], S_secret[31]);
 }
 
 static ssize_t ds28e16_ds_S_secret_store(struct device *dev,
@@ -1635,14 +1631,14 @@ static ssize_t ds28e16_ds_S_secret_store(struct device *dev,
 					 const char *buf, size_t count)
 {
 	if (sscanf(buf, "%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx,%2hhx",
-		&S_secret[0], &S_secret[1], &S_secret[2], &S_secret[3],
-		&S_secret[4], &S_secret[5], &S_secret[6], &S_secret[7],
-		&S_secret[8], &S_secret[9], &S_secret[10], &S_secret[11],
-		&S_secret[12], &S_secret[13], &S_secret[14], &S_secret[15],
-		&S_secret[16], &S_secret[17], &S_secret[18], &S_secret[19],
-		&S_secret[20], &S_secret[21], &S_secret[22], &S_secret[23],
-		&S_secret[24], &S_secret[25], &S_secret[26], &S_secret[27],
-		&S_secret[28], &S_secret[29], &S_secret[30], &S_secret[31]) != 32)
+			&S_secret[0], &S_secret[1], &S_secret[2], &S_secret[3],
+			&S_secret[4], &S_secret[5], &S_secret[6], &S_secret[7],
+			&S_secret[8], &S_secret[9], &S_secret[10], &S_secret[11],
+			&S_secret[12], &S_secret[13], &S_secret[14], &S_secret[15],
+			&S_secret[16], &S_secret[17], &S_secret[18], &S_secret[19],
+			&S_secret[20], &S_secret[21], &S_secret[22], &S_secret[23],
+			&S_secret[24], &S_secret[25], &S_secret[26], &S_secret[27],
+			&S_secret[28], &S_secret[29], &S_secret[30], &S_secret[31]) != 32)
 		return -EINVAL;
 
 	return count;
@@ -1702,19 +1698,18 @@ static ssize_t ds28e16_ds_readstatus_status_read(struct device *dev,
 			ds_log("DS28E16_cmd_readStatus fail!\n");
 		}
 		ds_dbg("Status = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-		status[0], status[1], status[2], status[3],
-		status[4], status[5], status[6], status[7],
-		status[8], status[9], status[10], status[11],
-		status[12], status[13], status[14], status[15]);
+				status[0], status[1], status[2], status[3],
+				status[4], status[5], status[6], status[7],
+				status[8], status[9], status[10], status[11],
+				status[12], status[13], status[14], status[15]);
 		Delay_us(1000);
 	}
 	ds_log("test done\nsuccess time: %d\n", count);
-	return scnprintf(buf, PAGE_SIZE,
-	"Success = %d\nStatus = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n",
-	count, status[0], status[1], status[2], status[3],
-	status[4], status[5], status[6], status[7],
-	status[8], status[9], status[10], status[11],
-	status[12], status[13], status[14], status[15]);
+	return scnprintf(buf, PAGE_SIZE, "Success = %d\nStatus = %02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x,%02x\n", count,
+			status[0], status[1], status[2], status[3],
+			status[4], status[5], status[6], status[7],
+			status[8], status[9], status[10], status[11],
+			status[12], status[13], status[14], status[15]);
 }
 
 static DEVICE_ATTR(ds_readstatus, S_IRUGO,
@@ -1774,18 +1769,16 @@ static void authentic_work(struct work_struct *work)
 {
 	int rc;
 	union power_supply_propval pval = {0, };
-	struct ds28e16_data *ds28e16_data = container_of(work,
-				struct ds28e16_data, authentic_work.work);
+	struct ds28e16_data *ds28e16_data = container_of(work, struct ds28e16_data, authentic_work.work);
 
 	rc = power_supply_get_property(ds28e16_data->verify_psy,
 			POWER_SUPPLY_PROP_AUTHEN_RESULT, &pval);
 	if (pval.intval != true) {
 		retry_authentic++;
 		if (retry_authentic < AUTHENTIC_COUNT_MAX) {
-			ds_info("battery authentic retry times is %d.\n",
-					retry_authentic);
+			ds_info("battery authentic retry times is %d.\n", retry_authentic);
 			schedule_delayed_work(&ds28e16_data->authentic_work,
-				msecs_to_jiffies(authentic_period_ms));
+					msecs_to_jiffies(authentic_period_ms));
 		}
 
 		/*if (retry_authentic == AUTHENTIC_COUNT_MAX) {
@@ -1805,8 +1798,8 @@ static int ds28e16_probe(struct platform_device *pdev)
 	int retval = 0;
 	struct ds28e16_data *ds28e16_data;
 
-	ds_log("%s entry.", __func__);
-	ds_dbg("platform_device is %s", pdev->name);
+	ds_log("%s entry\n", __func__);
+	ds_dbg("platform_device is %s\n", pdev->name);
 	if (strcmp(pdev->name, "soc:maxim_ds28e16") != 0)
 		return -ENODEV;
 
@@ -1814,9 +1807,7 @@ static int ds28e16_probe(struct platform_device *pdev)
 		return -ENODEV;
 
 	if (pdev->dev.of_node) {
-		ds28e16_data = devm_kzalloc(&pdev->dev,
-			sizeof(struct ds28e16_data),
-			GFP_KERNEL);
+		ds28e16_data = devm_kzalloc(&pdev->dev, sizeof(struct ds28e16_data), GFP_KERNEL);
 		if (!ds28e16_data) {
 			ds_err("Failed to allocate memory\n");
 			return -ENOMEM;
@@ -1836,34 +1827,35 @@ static int ds28e16_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	mutex_init(&ds_cmd_lock); //2022_4_19 updated
 	ds28e16_data->dev = &pdev->dev;
 	ds28e16_data->pdev = pdev;
 	platform_set_drvdata(pdev, ds28e16_data);
+
+	mutex_init(&ds_cmd_lock); //2022_4_19 updated
 	INIT_DELAYED_WORK(&ds28e16_data->authentic_work, authentic_work);
 
 	retval = verify_psy_register(ds28e16_data);
 	if (retval) {
-		ds_err("Failed to verify_psy_register, err:%d\n", retval);
+		ds_err("Failed to verify_psy_register, err: %d\n", retval);
 		goto ds28e16_psy_register_err;
 	}
 
 	retval = sysfs_create_group(&ds28e16_data->dev->kobj, &ds_attr_group);
 	if (retval) {
-		ds_err("Failed to register sysfs, err:%d\n", retval);
+		ds_err("Failed to register sysfs, err: %d\n", retval);
 		goto ds28e16_create_group_err;
 	}
 
 	schedule_delayed_work(&ds28e16_data->authentic_work,
-		msecs_to_jiffies(500)); //updated 20220615 make sure onewire gpio source ready
+			msecs_to_jiffies(500)); //updated 20220615 make sure onewire gpio source ready
 
 	return 0;
 
 ds28e16_create_group_err:
-//sysfs_remove_groups(&ds28e16_data->dev->kobj, &(&ds_attr_group));
+	//sysfs_remove_groups(&ds28e16_data->dev->kobj, &(&ds_attr_group));
 ds28e16_psy_register_err:
-mutex_destroy(&ds_cmd_lock); //2022_4_20 updated
-dev_set_drvdata(ds28e16_data->dev, NULL);
+	mutex_destroy(&ds_cmd_lock); //2022_4_20 updated
+	dev_set_drvdata(ds28e16_data->dev, NULL);
 ds28e16_parse_dt_err:
 	kfree(ds28e16_data);
 	return retval;
@@ -1876,6 +1868,7 @@ static int ds28e16_remove(struct platform_device *pdev)
 	mutex_destroy(&ds_cmd_lock); //2022_4_19 updated
 	verify_psy_unregister(ds28e16_data);
 	kfree(ds28e16_data);
+
 	return 0;
 }
 
@@ -1917,14 +1910,14 @@ static struct platform_driver ds28e16_driver = {
 
 static int __init ds28e16_init(void)
 {
-	ds_log("%s entry.", __func__);
+	ds_log("%s entry\n", __func__);
 
 	return platform_driver_register(&ds28e16_driver);
 }
 
 static void __exit ds28e16_exit(void)
 {
-	ds_log("%s entry.", __func__);
+	ds_log("%s entry\n", __func__);
 	platform_driver_unregister(&ds28e16_driver);
 }
 

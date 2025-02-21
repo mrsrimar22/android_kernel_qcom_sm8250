@@ -310,7 +310,7 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 					nopmi_chg_jeita->dt.temp_t1p5_thres);
 			}
 			if (sw_jeita->sm == TEMP_BELOW_T0) {
-				pr_err("[SW_JEITA] 3Battery Temperature between %d and %d, not allow charging yet!!\n",
+				pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
 					nopmi_chg_jeita->dt.temp_tn1_thres,
 					nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 				sw_jeita->charging = false;
@@ -326,7 +326,7 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 		if ((sw_jeita->sm == TEMP_BELOW_T0 || sw_jeita->sm == TEMP_TN1_TO_T0) &&
 			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree)) {
 			if (sw_jeita->sm == TEMP_BELOW_T0) {
-				pr_err("[SW_JEITA] 2Battery Temperature between %d and %d, not allow charging yet!!\n",
+				pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
 					nopmi_chg_jeita->dt.temp_tn1_thres,
 					nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 				sw_jeita->charging = false;
@@ -345,7 +345,7 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_tn1_thres) {
 		if ((sw_jeita->sm == TEMP_BELOW_T0) &&
 			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree)) {
-			pr_err("[SW_JEITA] 1Battery Temperature between %d and %d, not allow charging yet!!\n",
+			pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
 				nopmi_chg_jeita->dt.temp_tn1_thres,
 				nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 			sw_jeita->charging = false;

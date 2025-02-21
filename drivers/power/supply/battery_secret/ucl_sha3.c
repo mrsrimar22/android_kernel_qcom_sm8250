@@ -65,19 +65,24 @@ SOFTWARE.
 #include "ucl_sha3.h"
 
 #define N_ROUNDS 24 // the specialization for  keccak-f from keccak-p
-#define ROTL64(x, y) (((x) << (y)) | ((x) >> ((sizeof(unsigned long long)*8) - (y))))
+#define ROTL64(x, y) (((x) << (y)) | ((x) >> ((sizeof(unsigned long long) * 8) - (y))))
 
 const unsigned long long kcf_rc[24] = {
-									0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
-									0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
-									0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
-									0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
-									0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
-									0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
-									0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
-									0x8000000000008080, 0x0000000080000001, 0x8000000080008008};
-static const unsigned char kcf_rho[24] = {1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44};
-static const unsigned char kcf_pilane[24] = {10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1};
+		0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
+		0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
+		0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
+		0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
+		0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
+		0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+		0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
+		0x8000000000008080, 0x0000000080000001, 0x8000000080008008
+};
+static const unsigned char kcf_rho[24] = {
+		1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44
+};
+static const unsigned char kcf_pilane[24] = {
+		10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1
+};
 
 // generally called after SHA3_SPONGE_WORDS-ctx->capacityWords words
 // are XORed into the state s
@@ -123,8 +128,10 @@ int ucl_shake128_init(ucl_sha3_ctx_t *ctx)
 {
 	if (ctx == NULL)
 		return UCL_INVALID_INPUT;
+
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->capacityWords = 2 * 128 / (8 * sizeof(unsigned long long));
+
 	return UCL_OK;
 }
 
@@ -132,8 +139,10 @@ int ucl_sha3_224_init(ucl_sha3_ctx_t *ctx)
 {
 	if (ctx == NULL)
 		return UCL_INVALID_INPUT;
+
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->capacityWords = 448 / (8 * sizeof(unsigned long long));
+
 	return UCL_OK;
 }
 
@@ -141,8 +150,10 @@ int  ucl_sha3_256_init(ucl_sha3_ctx_t *ctx)
 {
 	if (ctx == NULL)
 		return UCL_INVALID_INPUT;
+
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->capacityWords = 512 / (8 * sizeof(unsigned long long));
+
 	return UCL_OK;
 }
 
@@ -155,8 +166,10 @@ int  ucl_sha3_384_init(ucl_sha3_ctx_t *ctx)
 {
 	if (ctx == NULL)
 		return UCL_INVALID_INPUT;
+
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->capacityWords = 768 / (8 * sizeof(unsigned long long));
+
 	return UCL_OK;
 }
 
@@ -164,8 +177,10 @@ int  ucl_sha3_512_init(ucl_sha3_ctx_t *ctx)
 {
 	if (ctx == NULL)
 		return UCL_INVALID_INPUT;
+
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->capacityWords = 1024 / (8 * sizeof(unsigned long long));
+
 	return UCL_OK;
 }
 

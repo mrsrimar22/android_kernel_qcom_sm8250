@@ -128,17 +128,17 @@ int nopmi_get_quick_charge_type(struct power_supply *usb_psy)
 		return -EINVAL;
 	}
 
-	pr_info("battery temp: %d", prop.intval);
+	pr_info("battery temp: %d\n", prop.intval);
 	if (prop.intval < 50 || prop.intval >= 480) {
 		if (usb_psy && !is_single_flash) {
-			pr_info("battery temp is under 5 or above 48");
+			pr_info("battery temp is under 5 or above 48\n");
 			power_supply_changed(usb_psy);
 		}
 		is_single_flash = true;
 		return 0;
 	} else {
 		if (usb_psy && is_single_flash) {
-			pr_info("battery temp returned to normal");
+			pr_info("battery temp returned to normal\n");
 			power_supply_changed(usb_psy);
 		}
 		is_single_flash = false;

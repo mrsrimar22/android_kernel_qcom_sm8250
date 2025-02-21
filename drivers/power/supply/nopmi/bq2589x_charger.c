@@ -987,11 +987,11 @@ static void bq2589x_dump_regs(struct bq2589x *bq)
 	int addr, ret;
 	u8 val;
 
-	bq_dbg(PR_OEM, "bq2589x_dump_regs: ");
+	bq_dbg(PR_OEM, "bq2589x_dump_regs:\n");
 	for (addr = 0x0; addr <= 0x14; addr++) {
 		ret = bq2589x_read_byte(bq, &val, addr);
 		if (ret == 0)
-			bq_dbg(PR_OEM, "Reg[%.2x] = 0x%.2x ", addr, val);
+			bq_dbg(PR_OEM, "Reg[%.2x] = 0x%.2x\n", addr, val);
 	}
 }
 #endif
@@ -1670,7 +1670,7 @@ static void bq2589x_usb_changed_workfunc(struct work_struct *work)
 			ret = power_supply_get_property(bq->usb_psy,
 					POWER_SUPPLY_PROP_REAL_TYPE, &val);
 			chg_type = val.intval;
-			pr_info("chg_type = %d", chg_type);
+			pr_info("chg_type: %d\n", chg_type);
 			if (chg_type == POWER_SUPPLY_TYPE_USB_PD || chg_type == POWER_SUPPLY_TYPE_USB_HVDCP)
 				power_supply_changed(bq->usb_psy);
 		}
@@ -1688,7 +1688,7 @@ static void bq2589x_tune_volt_workfunc(struct work_struct *work)
 	bq->vbus_volt = bq2589x_adc_read_vbus_volt(bq);
 
 	if ((pe.tune_up_volt && bq->vbus_volt > pe.target_volt) ||
-		(pe.tune_down_volt && bq->vbus_volt < pe.target_volt)) {
+			(pe.tune_down_volt && bq->vbus_volt < pe.target_volt)) {
 		pe.tune_done = true;
 		bq2589x_adjust_absolute_vindpm(bq);
 		if (pe.tune_up_volt)
@@ -1805,8 +1805,7 @@ static void bq2589x_monitor_workfunc(struct work_struct *work)
 	if (ret == 0 && (status & BQ2589X_IDPM_STAT_MASK))
 		bq_dbg(PR_OEM, "IINDPM occurred\n");
 
-	if (bq->vbus_type == BQ2589X_VBUS_USB_DCP && bq->vbus_volt > pe.high_volt_level &&
-		bq->rsoc > 95 && !pe.tune_down_volt) {
+	if (bq->vbus_type == BQ2589X_VBUS_USB_DCP && bq->vbus_volt > pe.high_volt_level && bq->rsoc > 95 && !pe.tune_down_volt) {
 		pe.tune_down_volt = true;
 		pe.tune_up_volt = false;
 		pe.target_volt = pe.low_volt_level;
@@ -1861,13 +1860,13 @@ static void bq2589x_start_charging_workfunc(struct work_struct *work)
 
 	while (bq->bms_psy && bq->batt_psy && times <= 50) {
 		status = bq2589x_get_charging_status(bq);
-		pr_info("times: %d, status: %d", times, status);
+		pr_info("times: %d, status: %d\n", times, status);
 		if (status != last_status) {
 			last_status = status;
 			power_supply_changed(bq->batt_psy);
 		}
 		if (status == POWER_SUPPLY_STATUS_CHARGING) {
-			pr_info("power_supply_changed: bms_psy");
+			pr_info("power_supply_changed: bms_psy\n");
 			power_supply_changed(bq->bms_psy);
 			break;
 		}
@@ -2300,10 +2299,10 @@ static int pd_tcp_notifier_call(struct notifier_block *pnb,
 			bq2589x_set_typec_mode(bq, typec_mode);
 		break;
 	case TCP_NOTIFY_EXT_DISCHARGE:
-		pr_info("%s: usb plug out", __func__);
+		pr_info("%s: usb plug out\n", __func__);
 		break;
 	case TCP_NOTIFY_SOURCE_VBUS:
-		pr_info("%s: TCP_NOTIFY_SOURCE_VBUS", __func__);
+		pr_info("%s: TCP_NOTIFY_SOURCE_VBUS\n", __func__);
 		//2021.09.11 wsy crash this case
 		if ((noti->vbus_state.mv == TCPC_VBUS_SOURCE_0V) && (vbus_on)) {
 			/* disable OTG power output */

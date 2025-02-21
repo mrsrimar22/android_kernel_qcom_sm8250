@@ -1,4 +1,3 @@
-
 #define pr_fmt(fmt)	"[USBPD-PM]: %s: " fmt, __func__
 
 #include <linux/slab.h>
@@ -613,7 +612,7 @@ static int usbpd_pm_check_cp_enabled(struct usbpd_pm *pdpm)
 	if (!ret)
 		pdpm->cp.charge_enabled = !!val.intval;
 
-	pr_info("check_cp_enabled: %d", pdpm->cp.charge_enabled);
+	pr_info("check_cp_enabled: %d\n", pdpm->cp.charge_enabled);
 	return ret;
 }
 
@@ -631,7 +630,7 @@ static int usbpd_pm_check_cp_sec_enabled(struct usbpd_pm *pdpm)
 	if (!ret)
 		pdpm->cp_sec.charge_enabled = !!val.intval;
 
-	pr_info("check_cp_sec_enabled: %d", pdpm->cp_sec.charge_enabled);
+	pr_info("check_cp_sec_enabled: %d\n", pdpm->cp_sec.charge_enabled);
 	return ret;
 }
 

@@ -748,7 +748,7 @@ static int nopmi_usb_set_prop(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_MTBF_CUR:
 		g_nopmi_chg->mtbf_cur = val->intval;
-		pr_info("%s psp=%d, Set MTBF current, val->intval=%d", __func__, psp, val->intval);
+		pr_info("%s psp=%d, Set MTBF current, val->intval=%d\n", __func__, psp, val->intval);
 		ret = 0;
 		break;
 	case POWER_SUPPLY_PROP_REAL_TYPE:
