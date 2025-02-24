@@ -1251,19 +1251,7 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	rc = nopmi_parse_dt(nopmi_chg);
 	if (rc < 0) {
 		pr_err("%s: Couldn't parse device tree, rc=%d\n", __func__, rc);
-		goto cleanup;
-	}
-
-	rc = nopmi_init_batt_psy(nopmi_chg);
-	if (rc < 0) {
-		pr_err("%s: Couldn't initialize batt psy, rc=%d\n", __func__, rc);
-		goto cleanup;
-	}
-
-	rc = nopmi_init_usb_psy(nopmi_chg);
-	if (rc < 0) {
-		pr_err("%s: Couldn't initialize usb psy, rc=%d\n", __func__, rc);
-		goto cleanup;
+		goto err_free;
 	}
 
 	nopmi_chg->bms_psy = bms_psy;
@@ -1287,14 +1275,41 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 
 	g_nopmi_chg = nopmi_chg;
 
+	rc = nopmi_init_batt_psy(nopmi_chg);
+	if (rc < 0) {
+		pr_err("%s: Couldn't initialize batt psy, rc=%d\n", __func__, rc);
+		goto err_psy;
+	}
+
+	rc = nopmi_init_usb_psy(nopmi_chg);
+	if (rc < 0) {
+		pr_err("%s: Couldn't initialize usb psy, rc=%d\n", __func__, rc);
+		goto err_psy;
+	}
+
 	pr_info("wsy nopmi_chg probe end\n");
 	return 0;
 
-cleanup:
-	pr_err("wsy nopmi_chg probe fail\n");
-	//devm_kfree(&pdev->dev,nopmi_chg);
+err_psy:
+	cancel_delayed_work_sync(&nopmi_chg->nopmi_chg_work);
+	cancel_delayed_work_sync(&nopmi_chg->cvstep_monitor_work);
+	nopmi_chg_jeita_deinit(&nopmi_chg->jeita_ctl);
+
+	if ((NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) ||
+			(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
+			(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type()))
+		device_init_wakeup(nopmi_chg->dev, false);
+
+	power_supply_put(nopmi_chg->bms_psy);
+	power_supply_put(nopmi_chg->main_psy);
+
+	g_nopmi_chg = NULL;
+err_free:
 	power_supply_put(bms_psy);
 	power_supply_put(main_psy);
+
+	// devm_kfree(&pdev->dev, nopmi_chg);
+	pr_err("wsy nopmi_chg probe fail\n");
 	return rc;
 }
 
@@ -1309,10 +1324,8 @@ static int nopmi_chg_remove(struct platform_device *pdev)
 	cancel_delayed_work_sync(&nopmi_chg->cvstep_monitor_work);
 	nopmi_chg_jeita_deinit(&nopmi_chg->jeita_ctl);
 
-	if (nopmi_chg->bms_psy)
-		power_supply_put(nopmi_chg->bms_psy);
-	if (nopmi_chg->main_psy)
-		power_supply_put(nopmi_chg->main_psy);
+	power_supply_put(nopmi_chg->bms_psy);
+	power_supply_put(nopmi_chg->main_psy);
 	if ((NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type()))

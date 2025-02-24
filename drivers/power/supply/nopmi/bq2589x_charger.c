@@ -2423,15 +2423,44 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 static int bq2589x_charger_probe(struct i2c_client *client,
 				 const struct i2c_device_id *id)
 {
-	struct bq2589x *bq;
+	struct bq2589x *bq = NULL;
+	struct power_supply *batt_psy = NULL;
+	struct power_supply *bms_psy = NULL;
+	struct tcpc_device *tcpc_dev = NULL;
 	int irqn;
 	int ret;
+	static int probe_cnt = 0;
+
+	pr_info("probe start, probe_cnt: %d\n", ++probe_cnt);
 
 	bq = devm_kzalloc(&client->dev, sizeof(struct bq2589x), GFP_KERNEL);
 	if (!bq) {
 		pr_err("%s: out of memory\n", __func__);
 		return -ENOMEM;
 	}
+
+	batt_psy = power_supply_get_by_name("battery");
+	if (IS_ERR_OR_NULL(batt_psy)) {
+		pr_info("batt psy not ready, defer probe\n");
+		return -EPROBE_DEFER;
+	}
+
+	bms_psy = power_supply_get_by_name("bms");
+	if (IS_ERR_OR_NULL(bms_psy)) {
+		pr_info("bms psy not ready, defer probe\n");
+		power_supply_put(batt_psy);
+		return -EPROBE_DEFER;
+	}
+
+#if defined(CONFIG_TCPC_RT1711H)
+	tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
+	if (IS_ERR_OR_NULL(tcpc_dev)) {
+		pr_info("tcpc device not ready, defer probe\n");
+		power_supply_put(batt_psy);
+		power_supply_put(bms_psy);
+		return -EPROBE_DEFER;
+	}
+#endif
 
 	bq->dev = &client->dev;
 	bq->client = client;
@@ -2444,27 +2473,22 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	if (!ret && bq->part_no == BQ25890) {
 		bq->status |= BQ2589X_STATUS_EXIST;
 		//bq->is_bq25890h = true;
-		bq_dbg(PR_OEM, "charger device bq25890 detected, revision:%d\n", bq->revision);
+		bq_dbg(PR_OEM, "charger device bq25890 detected, revision: %d\n", bq->revision);
 	} else if (!ret && bq->part_no == SYV690) {
 		bq->status |= BQ2589X_STATUS_EXIST;
 		//bq->is_bq25890h = false;
-		bq_dbg(PR_OEM, "charger device SYV690 detected, revision:%d\n", bq->revision);
+		bq_dbg(PR_OEM, "charger device SYV690 detected, revision: %d\n", bq->revision);
 	} else if (!ret && bq->part_no == SC89890H) {
 		bq->status |= BQ2589X_STATUS_EXIST;
 		//bq->is_bq25890h = false;
-		bq_dbg(PR_OEM, "charger device SC89890H detected, revision:%d\n", bq->revision);
+		bq_dbg(PR_OEM, "charger device SC89890H detected, revision: %d\n", bq->revision);
 	} else {
-		pr_err("no bq25890 charger device, found:%d\n", ret);
+		pr_err("no bq25890 charger device, found: %d\n", ret);
 		ret = -ENODEV;
 		goto err_free;
 	}
 
 	nopmi_set_charger_ic_type(NOPMI_CHARGER_IC_SYV);
-
-	bq->batt_psy = power_supply_get_by_name("battery");
-	bq->bms_psy = power_supply_get_by_name("bms");
-
-	g_bq = bq;
 
 	if (client->dev.of_node)
 		bq2589x_parse_dt(&client->dev, bq);
@@ -2489,9 +2513,13 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	}
 	client->irq = irqn;
 
+	bq->batt_psy = batt_psy;
+	bq->bms_psy = bms_psy;
+	bq->tcpc_dev = tcpc_dev;
+
 	ret = bq2589x_psy_register(bq);
 	if (ret)
-		goto err_free;
+		goto err_psy;
 
 	INIT_WORK(&bq->irq_work, bq2589x_charger_irq_workfunc);
 	INIT_WORK(&bq->adapter_in_work, bq2589x_adapter_in_workfunc);
@@ -2513,13 +2541,6 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		goto destroy_votable;
 	}
 
-	bq->chg_dis_votable = create_votable("CHG_DISABLE", VOTE_SET_ANY, chg_dis_vote_callback, bq);
-	if (IS_ERR(bq->chg_dis_votable)) {
-		ret = PTR_ERR(bq->chg_dis_votable);
-		bq->chg_dis_votable = NULL;
-		goto destroy_votable;
-	}
-
 	bq->fv_votable = create_votable("FV", VOTE_MIN, fv_vote_callback, bq);
 	if (IS_ERR(bq->fv_votable)) {
 		ret = PTR_ERR(bq->fv_votable);
@@ -2531,6 +2552,13 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	if (IS_ERR(bq->usb_icl_votable)) {
 		ret = PTR_ERR(bq->usb_icl_votable);
 		bq->usb_icl_votable = NULL;
+		goto destroy_votable;
+	}
+
+	bq->chg_dis_votable = create_votable("CHG_DISABLE", VOTE_SET_ANY, chg_dis_vote_callback, bq);
+	if (IS_ERR(bq->chg_dis_votable)) {
+		ret = PTR_ERR(bq->chg_dis_votable);
+		bq->chg_dis_votable = NULL;
 		goto destroy_votable;
 	}
 
@@ -2552,6 +2580,7 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		pr_err("failed to register sysfs. err: %d\n", ret);
 		goto err_irq;
 	}
+
 //modify by HTH-209427/HTH-209841 at 2022/05/12 begin
 	pe.enable = false;//PE adjuested to the front of the interrupt
 //modify by HTH-209427/HTH-209841 at 2022/05/12 end
@@ -2565,14 +2594,9 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	}
 
 	//schedule_work(&bq->irq_work); // 2020.09.15 change for zsa in case of adapter has been in when power off
+	g_bq = bq;
 
 #if defined(CONFIG_TCPC_RT1711H)
-	bq->tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
-	if (bq->tcpc_dev == NULL) {
-		pr_info("tcpc device not ready, defer\n");
-		ret = -EPROBE_DEFER;
-		goto err_get_tcpc_dev;
-	}
 	bq->pd_nb.notifier_call = pd_tcp_notifier_call;
 	ret = register_tcp_dev_notifier(bq->tcpc_dev, &bq->pd_nb, TCP_NOTIFY_TYPE_ALL);
 	if (ret < 0) {
@@ -2581,10 +2605,12 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		goto err_get_tcpc_dev;
 	}
 #endif
+
 	enable_irq_wake(irqn);
 	schedule_delayed_work(&bq->time_delay_work, msecs_to_jiffies(4000));
 
 	return 0;
+
 #if defined(CONFIG_TCPC_RT1711H)
 err_get_tcpc_dev:
 #endif
@@ -2602,15 +2628,33 @@ err_irq:
 	cancel_delayed_work_sync(&bq->time_delay_work);
 	//cancel_delayed_work_sync(&bq->period_work);
 destroy_votable:
-	destroy_votable(bq->fcc_votable);
-	destroy_votable(bq->chg_dis_votable);
-	destroy_votable(bq->fv_votable);
-	destroy_votable(bq->usb_icl_votable);
+	//for ovp lead reboot
 	//destroy_votable(bq->chgctrl_votable);
+	if (bq->chgctrl_votable) {
+		destroy_votable(bq->chg_dis_votable);
+		bq->chgctrl_votable = NULL;
+	}
+	if (bq->usb_icl_votable) {
+		destroy_votable(bq->usb_icl_votable);
+		bq->usb_icl_votable = NULL;
+	}
+	if (bq->fv_votable) {
+		destroy_votable(bq->fv_votable);
+		bq->fv_votable = NULL;
+	}
+	if (bq->fcc_votable) {
+		destroy_votable(bq->fcc_votable);
+		bq->fcc_votable = NULL;
+	}
+err_psy:
+	power_supply_put(bq->batt_psy);
+	power_supply_put(bq->bms_psy);
 err_free:
 	mutex_destroy(&bq->i2c_rw_lock);
 	mutex_destroy(&bq->usb_switch_lock);
-	devm_kfree(&client->dev,bq);
+	power_supply_put(batt_psy);
+	power_supply_put(bms_psy);
+	devm_kfree(&client->dev, bq);
 	g_bq = NULL;
 	return ret;
 }
@@ -2620,13 +2664,10 @@ static void bq2589x_charger_shutdown(struct i2c_client *client)
 	struct bq2589x *bq = i2c_get_clientdata(client);
 
 	bq2589x_disable_otg(bq);
-
 	bq2589x_exit_hiz_mode(bq);
 	bq2589x_adc_stop(bq);
-	bq2589x_psy_unregister(bq);
 	msleep(2);
 
-	sysfs_remove_group(&bq->dev->kobj, &bq2589x_attr_group);
 	cancel_work_sync(&bq->irq_work);
 	cancel_work_sync(&bq->adapter_in_work);
 	cancel_work_sync(&bq->adapter_out_work);
@@ -2639,6 +2680,9 @@ static void bq2589x_charger_shutdown(struct i2c_client *client)
 	cancel_delayed_work_sync(&bq->pe_volt_tune_work);
 	cancel_delayed_work_sync(&bq->time_delay_work);
 	//cancel_delayed_work_sync(&bq->period_work);
+
+	sysfs_remove_group(&bq->dev->kobj, &bq2589x_attr_group);
+	bq2589x_psy_unregister(bq);
 	if (bq->client->irq) {
 		disable_irq(bq->client->irq);
 		free_irq(bq->client->irq, bq);

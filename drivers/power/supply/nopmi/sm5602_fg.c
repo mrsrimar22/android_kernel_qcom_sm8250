@@ -1480,6 +1480,7 @@ static int fg_prop_is_writeable(struct power_supply *psy,
 		ret = 0;
 		break;
 	}
+
 	return ret;
 }
 
@@ -1870,7 +1871,7 @@ static void fg_refresh_status(struct sm_fg_chip *sm)
 			sm->start_low_battery_check = false;
 			sm->low_battery_power = false;
 		}
-		pr_info("batt_soc: %d, batt_volt: %d, start_low_battery_check: %d, low_battery_power: %d\n",
+		pr_info("batt_soc:%d, batt_volt:%d, start_low_battery_check: %d, low_battery_power: %d\n",
 				sm->batt_soc, sm->batt_volt, sm->start_low_battery_check, sm->low_battery_power);
 
 		sm->soc_reporting_ready = 1;
@@ -2074,18 +2075,17 @@ static bool fg_check_reg_init_need(struct i2c_client *client)
 #define MAXVAL(a, b) ((a > b) ? a : b)
 static int fg_calculate_iocv(struct sm_fg_chip *sm)
 {
-	bool only_lb = false, sign_i_offset = false; //valid_cb=false,
+	bool only_lb = false, sign_i_offset = false; //valid_cb=false
 	int roop_start = 0, roop_max = 0, i = 0, cb_last_index = 0, cb_pre_last_index = 0;
-	int lb_v_buffer[FG_INIT_B_LEN + 1] = {0, 0, 0, 0, 0, 0, 0, 0};
-	int lb_i_buffer[FG_INIT_B_LEN + 1] = {0, 0, 0, 0, 0, 0, 0, 0};
-	int cb_v_buffer[FG_INIT_B_LEN + 1] = {0, 0, 0, 0, 0, 0, 0, 0};
-	int cb_i_buffer[FG_INIT_B_LEN + 1] = {0, 0, 0, 0, 0, 0, 0, 0};
+	int lb_v_buffer[FG_INIT_B_LEN + 1] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	int lb_i_buffer[FG_INIT_B_LEN + 1] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	int cb_v_buffer[FG_INIT_B_LEN + 1] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	int cb_i_buffer[FG_INIT_B_LEN + 1] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	int i_offset_margin = 0x14, i_vset_margin = 0x67;
 	int v_max = 0, v_min = 0, v_sum = 0, lb_v_avg = 0, cb_v_avg = 0, lb_v_set = 0, lb_i_set = 0, i_offset = 0;
 	int i_max = 0, i_min = 0, i_sum = 0, lb_i_avg = 0, cb_i_avg = 0, cb_v_set = 0, cb_i_set = 0;
 	int lb_i_p_v_min = 0, lb_i_n_v_max = 0, cb_i_p_v_min = 0, cb_i_n_v_max = 0;
-	u16 v_ret;
-	int i_ret = 0;
+	u16 v_ret, i_ret = 0;
 	int ret = 0;
 	u16 data = 0;
 
@@ -2122,8 +2122,8 @@ static int fg_calculate_iocv(struct sm_fg_chip *sm)
 			i_ret = -(i_ret & 0x3FFF);
 		}
 
-		lb_v_buffer[i-roop_start] = v_ret;
-		lb_i_buffer[i-roop_start] = i_ret;
+		lb_v_buffer[i - roop_start] = v_ret;
+		lb_i_buffer[i - roop_start] = i_ret;
 
 		if (i == roop_start) {
 			v_max = v_ret;
@@ -2863,7 +2863,7 @@ static bool fg_init(struct i2c_client *client)
 	}
 
 	//sm->is_charging = (sm->batt_current > 9) ? true : false;
-	//pr_err("is_charging = %dd\n",sm->is_charging);
+	//pr_err("is_charging = %dd\n", sm->is_charging);
 
 	return true;
 }
@@ -3456,18 +3456,16 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 
 	fg_set_fastcharge_mode(sm, false);
 
-	INIT_DELAYED_WORK(&sm->monitor_work, fg_monitor_workfunc);
-	//INIT_DELAYED_WORK(&sm->soc_monitor_work, soc_monitor_work);
-
 	//20220108 : W/A for over 60degree
 	sm->overtemp_delay_on = false;
 	sm->overtemp_allow_restart = false;
 	sm->low_battery_power = false;
 	sm->start_low_battery_check = false;
+
+	INIT_DELAYED_WORK(&sm->monitor_work, fg_monitor_workfunc);
+	//INIT_DELAYED_WORK(&sm->soc_monitor_work, soc_monitor_work);
 	INIT_DELAYED_WORK(&sm->overtemp_delay_work, overtemp_delay_work);
 	INIT_DELAYED_WORK(&sm->LowBatteryCheckWork, LowBatteryChecKFunc);
-
-	pr_info("overtemp_delay_on: %d\n", sm->overtemp_delay_on);
 
 	fg_psy_register(sm);
 
@@ -3487,8 +3485,8 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 			//goto err_1;
 		}
 	}
+	fg_irq_thread(client->irq, sm); // if IRQF_TRIGGER_FALLING or IRQF_TRIGGER_RISING is needed, enable initial irq.
 #endif
-	//fg_irq_thread(client->irq, sm); // if IRQF_TRIGGER_FALLING or IRQF_TRIGGER_RISING is needed, enable initial irq.
 
 	sm->nb.notifier_call = sm5602_notifier_call;
 	ret = power_supply_reg_notifier(&sm->nb);
@@ -3529,14 +3527,14 @@ static int sm_fg_remove(struct i2c_client *client)
 	cancel_delayed_work_sync(&sm->LowBatteryCheckWork);
 	//cancel_delayed_work_sync(&sm->soc_monitor_work);
 
-	fg_psy_unregister(sm);
-
 	mutex_destroy(&sm->data_lock);
 	mutex_destroy(&sm->i2c_rw_lock);
 
 	debugfs_remove_recursive(sm->debug_root);
 
 	sysfs_remove_group(&sm->dev->kobj, &fg_attr_group);
+
+	fg_psy_unregister(sm);
 
 	return 0;
 }
