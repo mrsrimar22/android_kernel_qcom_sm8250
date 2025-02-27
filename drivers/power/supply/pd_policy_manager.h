@@ -210,8 +210,6 @@ struct usbpd_pm {
 	bool	jeita_triggered;
 	bool	is_temp_out_fc2_range;
 	bool	bq_cool_warm_done;
-
-
 };
 
 struct pdpm_config {
@@ -230,7 +228,6 @@ struct pdpm_config {
 
 	bool	cp_sec_enable;
 	bool	fc2_disable_sw;	/* disable switching charger during flash charge*/
-
 };
 
 extern POWER_LIST* usbpd_fetch_pdo(void);

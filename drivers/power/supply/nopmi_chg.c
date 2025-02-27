@@ -1247,6 +1247,7 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	nopmi_chg->dev = &pdev->dev;
 	nopmi_chg->pdev = pdev;
 	platform_set_drvdata(pdev, nopmi_chg);
+	g_nopmi_chg = nopmi_chg;
 
 	rc = nopmi_parse_dt(nopmi_chg);
 	if (rc < 0) {
@@ -1283,18 +1284,18 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	if ((NOPMI_CHARGER_IC_SYV == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_MAXIM == nopmi_get_charger_ic_type()) ||
 			(NOPMI_CHARGER_IC_SC == nopmi_get_charger_ic_type()))
-		device_init_wakeup(nopmi_chg->dev, true);
-
-	g_nopmi_chg = nopmi_chg;
+		device_init_wakeup(g_nopmi_chg->dev, true);
 
 	pr_info("wsy nopmi_chg probe end\n");
 	return 0;
 
 cleanup:
-	pr_err("wsy nopmi_chg probe fail\n");
 	//devm_kfree(&pdev->dev,nopmi_chg);
 	power_supply_put(bms_psy);
 	power_supply_put(main_psy);
+	g_nopmi_chg = NULL;
+
+	pr_err("wsy nopmi_chg probe fail\n");
 	return rc;
 }
 

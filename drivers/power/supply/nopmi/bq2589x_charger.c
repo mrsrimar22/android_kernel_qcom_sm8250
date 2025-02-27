@@ -308,7 +308,6 @@ static int bq2589x_disable_charger(struct bq2589x *bq)
 }
 //EXPORT_SYMBOL_GPL(bq2589x_disable_charger);
 
-
 /* interfaces that can be called by other module */
 int bq2589x_adc_start(struct bq2589x *bq, bool oneshot)
 {
@@ -449,7 +448,6 @@ int bq2589x_get_charge_current(struct bq2589x *bq)
 	}
 
 	return ((val & BQ2589X_ICHG_MASK) >> BQ2589X_ICHG_SHIFT) * BQ2589X_ICHG_LSB + BQ2589X_ICHG_BASE;
-
 }
 //EXPORT_SYMBOL_GPL(bq2589x_set_charge_current);
 
@@ -1873,6 +1871,7 @@ static void bq2589x_start_charging_workfunc(struct work_struct *work)
 		times++;
 		msleep(200);
 	}
+
 	if (stop)
 		start_fg_monitor_work(bq->bms_psy);
 }
@@ -2261,9 +2260,9 @@ static int pd_tcp_notifier_call(struct notifier_block *pnb,
 		break;
 	case TCP_NOTIFY_TYPEC_STATE:
 		if (noti->typec_state.old_state == TYPEC_UNATTACHED &&
-			(noti->typec_state.new_state == TYPEC_ATTACHED_SNK ||
-			noti->typec_state.new_state == TYPEC_ATTACHED_CUSTOM_SRC ||
-			noti->typec_state.new_state == TYPEC_ATTACHED_NORP_SRC)) {
+				(noti->typec_state.new_state == TYPEC_ATTACHED_SNK ||
+				noti->typec_state.new_state == TYPEC_ATTACHED_CUSTOM_SRC ||
+				noti->typec_state.new_state == TYPEC_ATTACHED_NORP_SRC)) {
 			bq_dbg(PR_OEM, "USB Plug in, pol=%d, state=%d\n", noti->typec_state.polarity, noti->typec_state.new_state);
 			pm_stay_awake(bq->dev);
 			bq2589x_init_device(bq);
@@ -2273,29 +2272,28 @@ static int pd_tcp_notifier_call(struct notifier_block *pnb,
 			cc_orientation = noti->typec_state.polarity;
 			bq2589x_set_cc_orientation(bq, cc_orientation);
 		} else if (noti->typec_state.old_state == TYPEC_UNATTACHED &&
-			noti->typec_state.new_state == TYPEC_ATTACHED_SRC) {
+				noti->typec_state.new_state == TYPEC_ATTACHED_SRC) {
 			typec_mode = POWER_SUPPLY_TYPEC_SINK;
 		} else if ((noti->typec_state.old_state == TYPEC_ATTACHED_SNK ||
-			noti->typec_state.old_state == TYPEC_ATTACHED_CUSTOM_SRC ||
-			noti->typec_state.old_state == TYPEC_ATTACHED_NORP_SRC ||
-			noti->typec_state.old_state == TYPEC_ATTACHED_SRC)
-			&& noti->typec_state.new_state == TYPEC_UNATTACHED) {
+				noti->typec_state.old_state == TYPEC_ATTACHED_CUSTOM_SRC ||
+				noti->typec_state.old_state == TYPEC_ATTACHED_NORP_SRC ||
+				noti->typec_state.old_state == TYPEC_ATTACHED_SRC) &&
+				noti->typec_state.new_state == TYPEC_UNATTACHED) {
 			set_pd_active(bq, 0);
 			typec_mode = POWER_SUPPLY_TYPEC_NONE;
 			bq_dbg(PR_OEM, "USB Plug out\n");
 			bq2589x_usb_switch(bq, false);
 			pm_relax(bq->dev);
 		} else if (noti->typec_state.old_state == TYPEC_ATTACHED_SRC &&
-			noti->typec_state.new_state == TYPEC_ATTACHED_SNK) {
+				noti->typec_state.new_state == TYPEC_ATTACHED_SNK) {
 			bq_dbg(PR_OEM, "Source_to_Sink\n");
 			typec_mode = POWER_SUPPLY_TYPEC_SINK;
 		} else if (noti->typec_state.old_state == TYPEC_ATTACHED_SNK &&
-			noti->typec_state.new_state == TYPEC_ATTACHED_SRC) {
+				noti->typec_state.new_state == TYPEC_ATTACHED_SRC) {
 			typec_mode = get_source_mode(noti);
 			bq_dbg(PR_OEM, "Sink_to_Source\n");
 		}
-		if (typec_mode >= POWER_SUPPLY_TYPEC_NONE
-			&& typec_mode <= POWER_SUPPLY_TYPEC_NON_COMPLIANT)
+		if (typec_mode >= POWER_SUPPLY_TYPEC_NONE && typec_mode <= POWER_SUPPLY_TYPEC_NON_COMPLIANT)
 			bq2589x_set_typec_mode(bq, typec_mode);
 		break;
 	case TCP_NOTIFY_EXT_DISCHARGE:
@@ -2423,9 +2421,21 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 static int bq2589x_charger_probe(struct i2c_client *client,
 				 const struct i2c_device_id *id)
 {
-	struct bq2589x *bq;
+	struct bq2589x *bq = NULL;
+	struct tcpc_device *tcpc_dev = NULL;
 	int irqn;
 	int ret;
+	static int probe_cnt = 0;
+
+	pr_info("probe start, probe_cnt: %d\n", ++probe_cnt);
+
+#if defined(CONFIG_TCPC_RT1711H)
+	tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
+	if (IS_ERR_OR_NULL(tcpc_dev)) {
+		pr_err("tcpc device not ready, defer probe\n");
+		return -EPROBE_DEFER;
+	}
+#endif
 
 	bq = devm_kzalloc(&client->dev, sizeof(struct bq2589x), GFP_KERNEL);
 	if (!bq) {
@@ -2456,11 +2466,12 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	} else {
 		pr_err("no bq25890 charger device, found:%d\n", ret);
 		ret = -ENODEV;
-		goto err_free;
+		goto err_dev;
 	}
 
 	nopmi_set_charger_ic_type(NOPMI_CHARGER_IC_SYV);
 
+	bq->tcpc_dev = tcpc_dev;
 	bq->batt_psy = power_supply_get_by_name("battery");
 	bq->bms_psy = power_supply_get_by_name("bms");
 
@@ -2552,11 +2563,11 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		pr_err("failed to register sysfs. err: %d\n", ret);
 		goto err_irq;
 	}
+
 //modify by HTH-209427/HTH-209841 at 2022/05/12 begin
 	pe.enable = false;//PE adjuested to the front of the interrupt
 //modify by HTH-209427/HTH-209841 at 2022/05/12 end
-	ret = request_irq(client->irq, bq2589x_charger_interrupt,
-		IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "bq2589x_charger1_irq", bq);
+	ret = request_irq(client->irq, bq2589x_charger_interrupt, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "bq2589x_charger1_irq", bq);
 	if (ret) {
 		pr_err("%s: Request IRQ %d failed: %d\n", __func__, client->irq, ret);
 		goto err_irq;
@@ -2567,12 +2578,6 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	//schedule_work(&bq->irq_work); // 2020.09.15 change for zsa in case of adapter has been in when power off
 
 #if defined(CONFIG_TCPC_RT1711H)
-	bq->tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
-	if (bq->tcpc_dev == NULL) {
-		pr_info("tcpc device not ready, defer\n");
-		ret = -EPROBE_DEFER;
-		goto err_get_tcpc_dev;
-	}
 	bq->pd_nb.notifier_call = pd_tcp_notifier_call;
 	ret = register_tcp_dev_notifier(bq->tcpc_dev, &bq->pd_nb, TCP_NOTIFY_TYPE_ALL);
 	if (ret < 0) {
@@ -2581,10 +2586,13 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		goto err_get_tcpc_dev;
 	}
 #endif
+
 	enable_irq_wake(irqn);
 	schedule_delayed_work(&bq->time_delay_work, msecs_to_jiffies(4000));
 
+	pr_info("probe done\n");
 	return 0;
+
 #if defined(CONFIG_TCPC_RT1711H)
 err_get_tcpc_dev:
 #endif
@@ -2602,16 +2610,35 @@ err_irq:
 	cancel_delayed_work_sync(&bq->time_delay_work);
 	//cancel_delayed_work_sync(&bq->period_work);
 destroy_votable:
-	destroy_votable(bq->fcc_votable);
-	destroy_votable(bq->chg_dis_votable);
-	destroy_votable(bq->fv_votable);
-	destroy_votable(bq->usb_icl_votable);
-	//destroy_votable(bq->chgctrl_votable);
+	if (bq->fcc_votable) {
+		destroy_votable(bq->fcc_votable);
+		bq->fcc_votable = NULL;
+	}
+	if (bq->chg_dis_votable) {
+		destroy_votable(bq->chg_dis_votable);
+		bq->chg_dis_votable = NULL;
+	}
+	if (bq->fv_votable) {
+		destroy_votable(bq->fv_votable);
+		bq->fv_votable = NULL;
+	}
+	if (bq->usb_icl_votable) {
+		destroy_votable(bq->usb_icl_votable);
+		bq->usb_icl_votable = NULL;
+	}
+	/*if (bq->chgctrl_votable)
+		destroy_votable(bq->chgctrl_votable);
+		bq->chgctrl_votable = NULL;
+	}*/
 err_free:
+	power_supply_put(bq->batt_psy);
+	power_supply_put(bq->bms_psy);
+err_dev:
 	mutex_destroy(&bq->i2c_rw_lock);
 	mutex_destroy(&bq->usb_switch_lock);
-	devm_kfree(&client->dev,bq);
 	g_bq = NULL;
+	devm_kfree(&client->dev, bq);
+	pr_err("probe fail\n");
 	return ret;
 }
 

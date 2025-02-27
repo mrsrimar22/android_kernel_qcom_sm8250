@@ -842,6 +842,7 @@ static void fg_tembase_zdscon(struct sm_fg_chip *sm)
 			}
 		}
 	}
+
 	return;
 }
 #endif
@@ -2084,8 +2085,7 @@ static int fg_calculate_iocv(struct sm_fg_chip *sm)
 	int v_max = 0, v_min = 0, v_sum = 0, lb_v_avg = 0, cb_v_avg = 0, lb_v_set = 0, lb_i_set = 0, i_offset = 0;
 	int i_max = 0, i_min = 0, i_sum = 0, lb_i_avg = 0, cb_i_avg = 0, cb_v_set = 0, cb_i_set = 0;
 	int lb_i_p_v_min = 0, lb_i_n_v_max = 0, cb_i_p_v_min = 0, cb_i_n_v_max = 0;
-	u16 v_ret;
-	int i_ret = 0;
+	u16 v_ret, i_ret = 0;
 	int ret = 0;
 	u16 data = 0;
 
@@ -2846,13 +2846,6 @@ static bool fg_init(struct i2c_client *client)
 	int ret;
 	struct sm_fg_chip *sm = i2c_get_clientdata(client);
 
-	/* sm5602 i2c read check */
-	ret = fg_get_device_id(client);
-	if (ret < 0) {
-		pr_err("%s: fail to do i2c read(%d)\n", __func__, ret);
-		return false;
-	}
-
 	if (fg_check_reg_init_need(client)) {
 		ret = fg_reset(sm);
 		if (ret < 0) {
@@ -3276,8 +3269,16 @@ static int fg_battery_parse_dt(struct sm_fg_chip *sm)
 bool hal_fg_init(struct i2c_client *client)
 {
 	struct sm_fg_chip *sm = i2c_get_clientdata(client);
+	int ret = 0;
 
 	pr_info("sm5602 hal_fg_init...\n");
+
+	/* sm5602 i2c read check */
+	ret = fg_get_device_id(client);
+	if (ret < 0) {
+		pr_err("%s: fail to do i2c read(%d)\n", __func__, ret);
+		return false;
+	}
 
 	mutex_lock(&sm->data_lock);
 	if (client->dev.of_node) {
@@ -3289,6 +3290,7 @@ bool hal_fg_init(struct i2c_client *client)
 
 	if (!fg_init(client))
 		return false;
+
 	//sm->batt_temp = 250;
 	mutex_unlock(&sm->data_lock);
 
@@ -3450,20 +3452,20 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 
 	if (!hal_fg_init(client)) {
 		pr_err("Failed to Initialize Fuelgauge\n");
-		ret = -ENODEV;
+		ret = -EIO;
 		goto err_free;
 	}
 
 	fg_set_fastcharge_mode(sm, false);
-
-	INIT_DELAYED_WORK(&sm->monitor_work, fg_monitor_workfunc);
-	//INIT_DELAYED_WORK(&sm->soc_monitor_work, soc_monitor_work);
 
 	//20220108 : W/A for over 60degree
 	sm->overtemp_delay_on = false;
 	sm->overtemp_allow_restart = false;
 	sm->low_battery_power = false;
 	sm->start_low_battery_check = false;
+
+	INIT_DELAYED_WORK(&sm->monitor_work, fg_monitor_workfunc);
+	//INIT_DELAYED_WORK(&sm->soc_monitor_work, soc_monitor_work);
 	INIT_DELAYED_WORK(&sm->overtemp_delay_work, overtemp_delay_work);
 	INIT_DELAYED_WORK(&sm->LowBatteryCheckWork, LowBatteryChecKFunc);
 
@@ -3512,6 +3514,7 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 	pr_info("2012.09.04 wsy %s: end\n", __func__);
 
 	return 0;
+
 //err_1:
 //	fg_psy_unregister(sm);
 err_free:
