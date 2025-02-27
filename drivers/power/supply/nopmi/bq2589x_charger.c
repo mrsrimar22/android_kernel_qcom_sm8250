@@ -2423,9 +2423,21 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 static int bq2589x_charger_probe(struct i2c_client *client,
 				 const struct i2c_device_id *id)
 {
-	struct bq2589x *bq;
+	struct bq2589x *bq = NULL;
+	struct tcpc_device *tcpc_dev = NULL;
 	int irqn;
 	int ret;
+	static int probe_cnt = 0;
+
+	pr_info("probe start, probe_cnt: %d\n", ++probe_cnt);
+
+#if defined(CONFIG_TCPC_RT1711H)
+	tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
+	if (IS_ERR_OR_NULL(tcpc_dev)) {
+		pr_err("tcpc device not ready, defer probe\n");
+		return -EPROBE_DEFER;
+	}
+#endif
 
 	bq = devm_kzalloc(&client->dev, sizeof(struct bq2589x), GFP_KERNEL);
 	if (!bq) {
@@ -2456,11 +2468,12 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	} else {
 		pr_err("no bq25890 charger device, found:%d\n", ret);
 		ret = -ENODEV;
-		goto err_free;
+		goto err_dev;
 	}
 
 	nopmi_set_charger_ic_type(NOPMI_CHARGER_IC_SYV);
 
+	bq->tcpc_dev = tcpc_dev;
 	bq->batt_psy = power_supply_get_by_name("battery");
 	bq->bms_psy = power_supply_get_by_name("bms");
 
@@ -2552,6 +2565,7 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		pr_err("failed to register sysfs. err: %d\n", ret);
 		goto err_irq;
 	}
+
 //modify by HTH-209427/HTH-209841 at 2022/05/12 begin
 	pe.enable = false;//PE adjuested to the front of the interrupt
 //modify by HTH-209427/HTH-209841 at 2022/05/12 end
@@ -2567,12 +2581,6 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 	//schedule_work(&bq->irq_work); // 2020.09.15 change for zsa in case of adapter has been in when power off
 
 #if defined(CONFIG_TCPC_RT1711H)
-	bq->tcpc_dev = tcpc_dev_get_by_name("type_c_port0");
-	if (bq->tcpc_dev == NULL) {
-		pr_info("tcpc device not ready, defer\n");
-		ret = -EPROBE_DEFER;
-		goto err_get_tcpc_dev;
-	}
 	bq->pd_nb.notifier_call = pd_tcp_notifier_call;
 	ret = register_tcp_dev_notifier(bq->tcpc_dev, &bq->pd_nb, TCP_NOTIFY_TYPE_ALL);
 	if (ret < 0) {
@@ -2581,10 +2589,13 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 		goto err_get_tcpc_dev;
 	}
 #endif
+
 	enable_irq_wake(irqn);
 	schedule_delayed_work(&bq->time_delay_work, msecs_to_jiffies(4000));
 
+	pr_info("probe done\n");
 	return 0;
+
 #if defined(CONFIG_TCPC_RT1711H)
 err_get_tcpc_dev:
 #endif
@@ -2602,16 +2613,34 @@ err_irq:
 	cancel_delayed_work_sync(&bq->time_delay_work);
 	//cancel_delayed_work_sync(&bq->period_work);
 destroy_votable:
-	destroy_votable(bq->fcc_votable);
-	destroy_votable(bq->chg_dis_votable);
-	destroy_votable(bq->fv_votable);
-	destroy_votable(bq->usb_icl_votable);
+	if (bq->fcc_votable) {
+		destroy_votable(bq->fcc_votable);
+		bq->fcc_votable = NULL;
+	}
+	if (bq->chg_dis_votable) {
+		destroy_votable(bq->chg_dis_votable);
+		bq->chg_dis_votable = NULL;
+	}
+	if (bq->fv_votable) {
+		destroy_votable(bq->fv_votable);
+		bq->fv_votable = NULL;
+	}
+	if (bq->usb_icl_votable) {
+		destroy_votable(bq->usb_icl_votable);
+		bq->usb_icl_votable = NULL;
+	}
 	//destroy_votable(bq->chgctrl_votable);
 err_free:
+	power_supply_put(bq->batt_psy);
+	power_supply_put(bq->bms_psy);
+err_dev:
 	mutex_destroy(&bq->i2c_rw_lock);
 	mutex_destroy(&bq->usb_switch_lock);
-	devm_kfree(&client->dev,bq);
+	power_supply_put(batt_psy);
+	power_supply_put(bms_psy);
 	g_bq = NULL;
+	devm_kfree(&client->dev,bq);
+	pr_err("probe fail\n");
 	return ret;
 }
 

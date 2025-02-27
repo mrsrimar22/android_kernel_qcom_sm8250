@@ -2084,8 +2084,7 @@ static int fg_calculate_iocv(struct sm_fg_chip *sm)
 	int v_max = 0, v_min = 0, v_sum = 0, lb_v_avg = 0, cb_v_avg = 0, lb_v_set = 0, lb_i_set = 0, i_offset = 0;
 	int i_max = 0, i_min = 0, i_sum = 0, lb_i_avg = 0, cb_i_avg = 0, cb_v_set = 0, cb_i_set = 0;
 	int lb_i_p_v_min = 0, lb_i_n_v_max = 0, cb_i_p_v_min = 0, cb_i_n_v_max = 0;
-	u16 v_ret;
-	int i_ret = 0;
+	u16 v_ret, i_ret = 0;
 	int ret = 0;
 	u16 data = 0;
 
@@ -3512,6 +3511,7 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 	pr_info("2012.09.04 wsy %s: end\n", __func__);
 
 	return 0;
+
 //err_1:
 //	fg_psy_unregister(sm);
 err_free:
