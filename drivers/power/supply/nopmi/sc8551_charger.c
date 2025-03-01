@@ -69,7 +69,7 @@ enum {
 };
 
 static int sc8551_mode_data[] = {
-	[SC8551_STDALONE] = SC8551_STDALONE,
+	[SC8551_STDALONE] = SC8551_ROLE_STDALONE,
 	[SC8551_MASTER] = SC8551_ROLE_MASTER,
 	[SC8551_SLAVE] = SC8551_ROLE_SLAVE,
 };
@@ -317,6 +317,7 @@ static int __sc8551_write_byte(struct sc8551 *sc, int reg, u8 val)
 		sc_err("i2c write fail: can't write 0x%02X to reg 0x%02X: %d\n", val, reg, ret);
 		return ret;
 	}
+
 	return 0;
 }
 
@@ -407,6 +408,7 @@ static int sc8551_check_charge_enabled(struct sc8551 *sc, bool *enabled)
 	sc_info(">>>reg [0x0c] = 0x%02x\n", val);
 	if (!ret)
 		*enabled = !!(val & SC8551_CHG_EN_MASK);
+
 	return ret;
 }
 
@@ -927,22 +929,24 @@ static int sc8551_get_adc_data(struct sc8551 *sc, int channel, int *result)
 	int ret;
 	u8 val_l, val_h;
 	u16 val;
+	s32 t;
 
 	if (channel < 0 || channel >= ADC_MAX_NUM)
-		return 0;
+		return -EINVAL;
 
 	ret = sc8551_read_byte(sc, ADC_REG_BASE + (channel << 1), &val_h);
 	ret = sc8551_read_byte(sc, ADC_REG_BASE + (channel << 1) + 1, &val_l);
-
 	if (ret < 0)
 		return ret;
-	val = (val_h << 8) | val_l;
-	*result = val;
 
+	val = (val_h << 8) | val_l;
 	if (sc->chip_vendor == SC8551) {
-		*result = (u64)val * (u64)sc8551_adc_lsb[channel] / 10000000;
+		t = (u64)val * (u64)sc8551_adc_lsb[channel] / 10000000;
+	} else {
+		t = val;
 	}
 
+	*result = t;
 	return 0;
 }
 EXPORT_SYMBOL_GPL(sc8551_get_adc_data);
@@ -1215,7 +1219,6 @@ static int sc8551_detect_device(struct sc8551 *sc)
 	}
 
 	pr_info("sc8551_detect_device: PART_INFO: 0x%x\n", data);
-
 	return ret;
 }
 
@@ -1225,7 +1228,6 @@ static int sc8551_parse_dt(struct sc8551 *sc, struct device *dev)
 	struct device_node *np = dev->of_node;
 
 	sc->cfg = devm_kzalloc(dev, sizeof(struct sc8551_cfg), GFP_KERNEL);
-
 	if (!sc->cfg)
 		return -ENOMEM;
 
@@ -1658,7 +1660,6 @@ static int sc8551_charger_get_property(struct power_supply *psy,
 	u8 reg_val;
 
 	//sc_dbg(">>>>>psp = %d\n", psp);
-
 	switch (psp) {
 	case POWER_SUPPLY_PROP_CHARGING_ENABLED:
 		sc8551_check_charge_enabled(sc, &sc->charge_enabled);
