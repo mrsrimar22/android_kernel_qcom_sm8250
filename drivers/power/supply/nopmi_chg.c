@@ -824,70 +824,70 @@ static int nopmi_init_usb_psy(struct nopmi_chg *chg)
 
 static int nopmi_parse_dt_jeita(struct nopmi_chg *chg, struct device_node *np)
 {
-	u32 val;
+	s32 val;
 
 	if (of_property_read_bool(np, "enable_sw_jeita"))
 		chg->jeita_ctl.dt.enable_sw_jeita = true;
 	else
 		chg->jeita_ctl.dt.enable_sw_jeita = false;
 
-	if (of_property_read_u32(np, "jeita_temp_above_t4_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_above_t4_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_above_t4_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_ABOVE_T4_CV: %d\n",
 				JEITA_TEMP_ABOVE_T4_CV);
 		chg->jeita_ctl.dt.jeita_temp_above_t4_cv = JEITA_TEMP_ABOVE_T4_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_t3_to_t4_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_t3_to_t4_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_t3_to_t4_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_T3_TO_T4_CV: %d\n",
 				JEITA_TEMP_T3_TO_T4_CV);
 		chg->jeita_ctl.dt.jeita_temp_t3_to_t4_cv = JEITA_TEMP_T3_TO_T4_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_t2_to_t3_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_t2_to_t3_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_t2_to_t3_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_T2_TO_T3_CV: %d\n",
 				JEITA_TEMP_T2_TO_T3_CV);
 		chg->jeita_ctl.dt.jeita_temp_t2_to_t3_cv = JEITA_TEMP_T2_TO_T3_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_t1p5_to_t2_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_t1p5_to_t2_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_t1p5_to_t2_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_T1P5_TO_T2_CV: %d\n",
 				JEITA_TEMP_T1P5_TO_T2_CV);
 		chg->jeita_ctl.dt.jeita_temp_t1p5_to_t2_cv = JEITA_TEMP_T1P5_TO_T2_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_t1_to_t1p5_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_t1_to_t1p5_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_t1_to_t1p5_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_T1_TO_T1P5_CV: %d\n",
 				JEITA_TEMP_T1_TO_T1P5_CV);
 		chg->jeita_ctl.dt.jeita_temp_t1_to_t1p5_cv = JEITA_TEMP_T1_TO_T1P5_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_t0_to_t1_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_t0_to_t1_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_t0_to_t1_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_T0_TO_T1_CV: %d\n",
 				JEITA_TEMP_T0_TO_T1_CV);
 		chg->jeita_ctl.dt.jeita_temp_t0_to_t1_cv = JEITA_TEMP_T0_TO_T1_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_tn1_to_t0_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_tn1_to_t0_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_tn1_to_t0_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_TN1_TO_T0_CV: %d\n",
 				JEITA_TEMP_TN1_TO_T0_CV);
 		chg->jeita_ctl.dt.jeita_temp_tn1_to_t0_cv = JEITA_TEMP_TN1_TO_T0_CV;
 	}
-	if (of_property_read_u32(np, "jeita_temp_below_t0_cv", &val) >= 0) {
+	if (of_property_read_s32(np, "jeita_temp_below_t0_cv", &val) >= 0) {
 		chg->jeita_ctl.dt.jeita_temp_below_t0_cv = val;
 	} else {
 		pr_info("use default JEITA_TEMP_BELOW_T0_CV: %d\n",
 				JEITA_TEMP_BELOW_T0_CV);
 		chg->jeita_ctl.dt.jeita_temp_below_t0_cv = JEITA_TEMP_BELOW_T0_CV;
 	}
-	if (of_property_read_u32(np, "normal-charge-voltage", &val) >= 0) {
+	if (of_property_read_s32(np, "normal-charge-voltage", &val) >= 0) {
 		chg->jeita_ctl.dt.normal_charge_voltage = val;
 	} else {
 		pr_info("use default JEITA_TEMP_NORMAL_VOLTAGE: %d\n",
@@ -895,152 +895,152 @@ static int nopmi_parse_dt_jeita(struct nopmi_chg *chg, struct device_node *np)
 		chg->jeita_ctl.dt.normal_charge_voltage = JEITA_TEMP_NORMAL_VOLTAGE;
 	}
 #if 0
-	if (!of_property_read_u32(np, "normal-charge-voltage",
+	if (!of_property_read_s32(np, "normal-charge-voltage",
 				&chg->jeita_ctl.dt.normal_charge_voltage)) {
 		chg->jeita_ctl.dt.normal_charge_voltage = JEITA_TEMP_NORMAL_VOLTAGE;
 	}
 #endif
-	if (of_property_read_u32(np, "temp_t4_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t4_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t4_thres = val;
 	} else {
 		pr_info("use default TEMP_T4_THRES: %d\n",
 				TEMP_T4_THRES);
 		chg->jeita_ctl.dt.temp_t4_thres = TEMP_T4_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t4_thres_minus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t4_thres_minus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t4_thres_minus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T4_THRES_MINUS_X_DEGREE: %d\n",
 				TEMP_T4_THRES_MINUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t4_thres_minus_x_degree = TEMP_T4_THRES_MINUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_t3_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t3_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t3_thres = val;
 	} else {
 		pr_info("use default TEMP_T3_THRES: %d\n",
 				TEMP_T3_THRES);
 		chg->jeita_ctl.dt.temp_t3_thres = TEMP_T3_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t3_thres_minus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t3_thres_minus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t3_thres_minus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T3_THRES_MINUS_X_DEGREE: %d\n",
 				TEMP_T3_THRES_MINUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t3_thres_minus_x_degree = TEMP_T3_THRES_MINUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_t2_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t2_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t2_thres = val;
 	} else {
 		pr_info("use default TEMP_T2_THRES: %d\n",
 				TEMP_T2_THRES);
 		chg->jeita_ctl.dt.temp_t2_thres = TEMP_T2_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t2_thres_plus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t2_thres_plus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t2_thres_plus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T2_THRES_PLUS_X_DEGREE: %d\n",
 				TEMP_T2_THRES_PLUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t2_thres_plus_x_degree = TEMP_T2_THRES_PLUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_t1p5_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1p5_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1p5_thres = val;
 	} else {
 		pr_info("use default TEMP_T1P5_THRES: %d\n",
 				TEMP_T1P5_THRES);
 		chg->jeita_ctl.dt.temp_t1p5_thres = TEMP_T1P5_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t1p5_thres_plus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1p5_thres_plus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1p5_thres_plus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T1P5_THRES_PLUS_X_DEGREE: %d\n",
 				TEMP_T1P5_THRES_PLUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t1p5_thres_plus_x_degree = TEMP_T1P5_THRES_PLUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_t1_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1_thres = val;
 	} else {
 		pr_info("use default TEMP_T1_THRES: %d\n",
 				TEMP_T1_THRES);
 		chg->jeita_ctl.dt.temp_t1_thres = TEMP_T1_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t1_thres_plus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1_thres_plus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1_thres_plus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T1_THRES_PLUS_X_DEGREE: %d\n",
 				TEMP_T1_THRES_PLUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t1_thres_plus_x_degree = TEMP_T1_THRES_PLUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_t0_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t0_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t0_thres = val;
 	} else {
 		pr_info("use default TEMP_T0_THRES: %d\n",
 				TEMP_T0_THRES);
 		chg->jeita_ctl.dt.temp_t0_thres = TEMP_T0_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t0_thres_plus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t0_thres_plus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t0_thres_plus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_T0_THRES_PLUS_X_DEGREE: %d\n",
 				TEMP_T0_THRES_PLUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_t0_thres_plus_x_degree = TEMP_T0_THRES_PLUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_tn1_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_tn1_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_tn1_thres = val;
 	} else {
 		pr_info("use default TEMP_TN1_THRES: %d\n",
 				TEMP_TN1_THRES);
 		chg->jeita_ctl.dt.temp_tn1_thres = TEMP_TN1_THRES;
 	}
-	if (of_property_read_u32(np, "temp_tn1_thres_plus_x_degree", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_tn1_thres_plus_x_degree", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_tn1_thres_plus_x_degree = val;
 	} else {
 		pr_info("use default TEMP_TN1_THRES_PLUS_X_DEGREE: %d\n",
 				TEMP_TN1_THRES_PLUS_X_DEGREE);
 		chg->jeita_ctl.dt.temp_tn1_thres_plus_x_degree = TEMP_TN1_THRES_PLUS_X_DEGREE;
 	}
-	if (of_property_read_u32(np, "temp_neg_10_thres", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_neg_10_thres", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_neg_10_thres = val;
 	} else {
 		pr_info("use default TEMP_NEG_10_THRES: %d\n",
 				TEMP_NEG_10_THRES);
 		chg->jeita_ctl.dt.temp_neg_10_thres = TEMP_NEG_10_THRES;
 	}
-	if (of_property_read_u32(np, "temp_t3_to_t4_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t3_to_t4_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t3_to_t4_fcc = val;
 	} else {
 		pr_info("use default TEMP_T3_TO_T4_FCC: %d\n",
 				TEMP_T3_TO_T4_FCC);
 		chg->jeita_ctl.dt.temp_t3_to_t4_fcc = TEMP_T3_TO_T4_FCC;
 	}
-	if (of_property_read_u32(np, "temp_t2_to_t3_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t2_to_t3_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t2_to_t3_fcc = val;
 	} else {
 		pr_info("use default TEMP_T2_TO_T3_FCC: %d\n",
 				TEMP_T2_TO_T3_FCC);
 		chg->jeita_ctl.dt.temp_t2_to_t3_fcc = TEMP_T2_TO_T3_FCC;
 	}
-	if (of_property_read_u32(np, "temp_t1p5_to_t2_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1p5_to_t2_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1p5_to_t2_fcc = val;
 	} else {
 		pr_info("use default TEMP_T1P5_TO_T2_FCC: %d\n",
 				TEMP_T1P5_TO_T2_FCC);
 		chg->jeita_ctl.dt.temp_t1p5_to_t2_fcc = TEMP_T1P5_TO_T2_FCC;
 	}
-	if (of_property_read_u32(np, "temp_t1_to_t1p5_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t1_to_t1p5_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t1_to_t1p5_fcc = val;
 	} else {
 		pr_info("use default TEMP_T1_TO_T1P5_FCC: %d\n",
 				TEMP_T1_TO_T1P5_FCC);
 		chg->jeita_ctl.dt.temp_t1_to_t1p5_fcc = TEMP_T1_TO_T1P5_FCC;
 	}
-	if (of_property_read_u32(np, "temp_t0_to_t1_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_t0_to_t1_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_t0_to_t1_fcc = val;
 	} else {
 		pr_info("use default TEMP_T0_TO_T1_FCC: %d\n",
 				TEMP_T0_TO_T1_FCC);
 		chg->jeita_ctl.dt.temp_t0_to_t1_fcc = TEMP_T0_TO_T1_FCC;
 	}
-	if (of_property_read_u32(np, "temp_tn1_to_t0_fcc", &val) >= 0) {
+	if (of_property_read_s32(np, "temp_tn1_to_t0_fcc", &val) >= 0) {
 		chg->jeita_ctl.dt.temp_tn1_to_t0_fcc = val;
 	} else {
 		pr_info("use default TEMP_TN1_TO_T0_FCC: %d\n",
@@ -1083,7 +1083,7 @@ static int nopmi_parse_dt(struct nopmi_chg *chg)
 		return -EINVAL;
 	}
 
-	rc = of_property_read_u32(np, "qcom,fv-max-uv", &chg->dt.batt_profile_fv_uv);
+	rc = of_property_read_s32(np, "qcom,fv-max-uv", &chg->dt.batt_profile_fv_uv);
 	if (rc < 0)
 		chg->dt.batt_profile_fv_uv = -EINVAL;
 	else
