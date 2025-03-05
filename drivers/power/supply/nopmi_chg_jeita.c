@@ -248,127 +248,125 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 	/* JEITA battery temp Standard */
 	if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t4_thres) {
 		pr_err("[SW_JEITA] Battery Over high Temperature(%d) !!\n",
-			nopmi_chg_jeita->dt.temp_t4_thres);
+				nopmi_chg_jeita->dt.temp_t4_thres);
 		sw_jeita->sm = TEMP_ABOVE_T4;
 		sw_jeita->charging = false;
 	} else if (nopmi_chg_jeita->battery_temp > nopmi_chg_jeita->dt.temp_t3_thres) {
 		/* control 45 degree to normal behavior */
 		if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t4_thres_minus_x_degree) {
 			pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
-				nopmi_chg_jeita->dt.temp_t4_thres_minus_x_degree,
-				nopmi_chg_jeita->dt.temp_t4_thres);
+					nopmi_chg_jeita->dt.temp_t4_thres_minus_x_degree,
+					nopmi_chg_jeita->dt.temp_t4_thres);
 			sw_jeita->charging = false;
 		} else {
 			pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t3_thres,
-				nopmi_chg_jeita->dt.temp_t4_thres);
+					nopmi_chg_jeita->dt.temp_t3_thres,
+					nopmi_chg_jeita->dt.temp_t4_thres);
 			sw_jeita->sm = TEMP_T3_TO_T4;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_t3_to_t4_fcc;
 		}
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t2_thres) {
 		if (((sw_jeita->sm == TEMP_T3_TO_T4) && (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t3_thres_minus_x_degree)) ||
-			((sw_jeita->sm == TEMP_T1P5_TO_T2) && (nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t2_thres_plus_x_degree))) {
+				((sw_jeita->sm == TEMP_T1P5_TO_T2) && (nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t2_thres_plus_x_degree))) {
 			pr_err("[SW_JEITA] Battery Temperature not recovery to normal temperature charging mode yet!!\n");
 		} else {
 			pr_info("[SW_JEITA] Battery Normal Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t2_thres,
-				nopmi_chg_jeita->dt.temp_t3_thres);
+					nopmi_chg_jeita->dt.temp_t2_thres,
+					nopmi_chg_jeita->dt.temp_t3_thres);
 			sw_jeita->sm = TEMP_T2_TO_T3;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_t2_to_t3_fcc;
 		}
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t1p5_thres) {
 		if ((sw_jeita->sm == TEMP_T1_TO_T1P5 || sw_jeita->sm == TEMP_T0_TO_T1) &&
-			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t1p5_thres_plus_x_degree)) {
+				(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t1p5_thres_plus_x_degree)) {
 			if (sw_jeita->sm == TEMP_T1_TO_T1P5) {
 				pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					nopmi_chg_jeita->dt.temp_t1p5_thres_plus_x_degree,
-					nopmi_chg_jeita->dt.temp_t2_thres);
+						nopmi_chg_jeita->dt.temp_t1p5_thres_plus_x_degree,
+						nopmi_chg_jeita->dt.temp_t2_thres);
 			}
 			if (sw_jeita->sm == TEMP_T0_TO_T1) {
 				pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree,
-					nopmi_chg_jeita->dt.temp_t1p5_thres);
+						nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree,
+						nopmi_chg_jeita->dt.temp_t1p5_thres);
 			}
 			if (sw_jeita->sm == TEMP_TN1_TO_T0) {
 				pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree,
-					nopmi_chg_jeita->dt.temp_tn1_thres);
+						nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree,
+						nopmi_chg_jeita->dt.temp_tn1_thres);
 			}
 		} else {
 			pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t1p5_thres,
-				nopmi_chg_jeita->dt.temp_t2_thres);
+					nopmi_chg_jeita->dt.temp_t1p5_thres,
+					nopmi_chg_jeita->dt.temp_t2_thres);
 			sw_jeita->sm = TEMP_T1P5_TO_T2;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_t1p5_to_t2_fcc;
 		}
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t1_thres) {
 		if ((sw_jeita->sm == TEMP_T0_TO_T1 || sw_jeita->sm == TEMP_BELOW_T0 || sw_jeita->sm == TEMP_TN1_TO_T0) &&
-			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree)) {
+				(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree)) {
 			if (sw_jeita->sm == TEMP_T0_TO_T1) {
 				pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree,
-					nopmi_chg_jeita->dt.temp_t1p5_thres);
+						nopmi_chg_jeita->dt.temp_t1_thres_plus_x_degree,
+						nopmi_chg_jeita->dt.temp_t1p5_thres);
 			}
 			if (sw_jeita->sm == TEMP_BELOW_T0) {
 				pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
-					nopmi_chg_jeita->dt.temp_tn1_thres,
-					nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
+						nopmi_chg_jeita->dt.temp_tn1_thres,
+						nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 				sw_jeita->charging = false;
 			}
 		} else {
 			pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t1_thres,
-				nopmi_chg_jeita->dt.temp_t1p5_thres);
+					nopmi_chg_jeita->dt.temp_t1_thres,
+					nopmi_chg_jeita->dt.temp_t1p5_thres);
 			sw_jeita->sm = TEMP_T1_TO_T1P5;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_t1_to_t1p5_fcc;
 		}
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_t0_thres) {
 		if ((sw_jeita->sm == TEMP_BELOW_T0 || sw_jeita->sm == TEMP_TN1_TO_T0) &&
-			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree)) {
+				(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree)) {
 			if (sw_jeita->sm == TEMP_BELOW_T0) {
 				pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
-					nopmi_chg_jeita->dt.temp_tn1_thres,
-					nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
+						nopmi_chg_jeita->dt.temp_tn1_thres,
+						nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 				sw_jeita->charging = false;
 			} else if (sw_jeita->sm == TEMP_TN1_TO_T0) {
 				pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree,
-					nopmi_chg_jeita->dt.temp_tn1_thres);
+						nopmi_chg_jeita->dt.temp_t0_thres_plus_x_degree,
+						nopmi_chg_jeita->dt.temp_tn1_thres);
 			}
 		} else {
 			pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t0_thres,
-				nopmi_chg_jeita->dt.temp_t1_thres);
+					nopmi_chg_jeita->dt.temp_t0_thres,
+					nopmi_chg_jeita->dt.temp_t1_thres);
 			sw_jeita->sm = TEMP_T0_TO_T1;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_t0_to_t1_fcc;
 		}
 	} else if (nopmi_chg_jeita->battery_temp >= nopmi_chg_jeita->dt.temp_tn1_thres) {
 		if ((sw_jeita->sm == TEMP_BELOW_T0) &&
-			(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree)) {
+				(nopmi_chg_jeita->battery_temp <= nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree)) {
 			pr_err("[SW_JEITA] Battery Temperature between %d and %d, not allow charging yet!!\n",
-				nopmi_chg_jeita->dt.temp_tn1_thres,
-				nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
+					nopmi_chg_jeita->dt.temp_tn1_thres,
+					nopmi_chg_jeita->dt.temp_tn1_thres_plus_x_degree);
 			sw_jeita->charging = false;
 		} else {
 			pr_info("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-				nopmi_chg_jeita->dt.temp_t0_thres,
-				nopmi_chg_jeita->dt.temp_tn1_thres);
+					nopmi_chg_jeita->dt.temp_t0_thres,
+					nopmi_chg_jeita->dt.temp_tn1_thres);
 			sw_jeita->sm = TEMP_TN1_TO_T0;
 			jeita_current_limit = nopmi_chg_jeita->dt.temp_tn1_to_t0_fcc;
 		}
 	} else {
 		pr_err("[SW_JEITA] Battery below low Temperature(%d) !!\n",
-			nopmi_chg_jeita->dt.temp_t0_thres);
+				nopmi_chg_jeita->dt.temp_t0_thres);
 		sw_jeita->sm = TEMP_BELOW_T0;
 		sw_jeita->charging = false;
 	}
 
 	if (nopmi_chg_jeita->fcc_votable) {
-		vote(nopmi_chg_jeita->fcc_votable, JEITA_VOTER, true,
-				jeita_current_limit);
+		vote(nopmi_chg_jeita->fcc_votable, JEITA_VOTER, true, jeita_current_limit);
 	} else {
-		ret = nopmi_chg_jeita_set_charger_current(nopmi_chg_jeita,
-				jeita_current_limit);
+		ret = nopmi_chg_jeita_set_charger_current(nopmi_chg_jeita, jeita_current_limit);
 	}
 
 	/* add for update fastcharge mode, start */
@@ -383,7 +381,8 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 		fast_charge_mode = prop.intval;
 	}
 
-	if (!g_ffc_disable && fast_charge_mode && (sw_jeita->sm != TEMP_T2_TO_T3)) {
+	if (!g_ffc_disable && fast_charge_mode &&
+			(sw_jeita->sm != TEMP_T2_TO_T3)) {
 		prop.intval = 0;
 		fast_charge_mode = 0;
 		power_supply_set_property(nopmi_chg_jeita->bms_psy,
@@ -462,7 +461,7 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 		} else {
 			ret = nopmi_chg_jeita_set_charger_voltage(nopmi_chg_jeita, sw_jeita->cv);
 			if (ret < 0)
-				pr_err("Couldn't set cv to %d, rc:%d\n", sw_jeita->cv, ret);
+				pr_err("Couldn't set cv to %d, rc: %d\n", sw_jeita->cv, ret);
 		}
 	}
 
@@ -487,7 +486,7 @@ static void nopmi_chg_handle_jeita_current(struct nopmi_chg_jeita_st *nopmi_chg_
 		if (sw_jeita->term_curr != term_curr_pre) {
 			ret = nopmi_chg_jeita_set_charger_term_current(nopmi_chg_jeita, sw_jeita->term_curr);
 			if (ret < 0)
-				pr_err("Couldn't set term curr to %d, rc:%d\n", sw_jeita->term_curr, ret);
+				pr_err("Couldn't set term curr to %d, rc: %d\n", sw_jeita->term_curr, ret);
 		}
 	}
 }
@@ -538,6 +537,7 @@ static void nopmi_chg_jeita_workfunc(struct work_struct *work)
 	struct nopmi_chg_jeita_st *chg_jeita = container_of(work, struct nopmi_chg_jeita_st, jeita_work.work);
 
 	pr_info("2021.09.10 wsy %s\n", __func__);
+
 	chg_jeita->usb_present = nopmi_chg_is_usb_present(chg_jeita->usb_psy);
 	if (!chg_jeita->usb_present)
 		return;

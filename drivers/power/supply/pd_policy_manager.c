@@ -61,7 +61,7 @@ static const struct pdpm_config pm_config = {
 	.fc2_disable_sw		= true,
 };
 
-static struct usbpd_pm *__pdpm;
+static struct usbpd_pm *__pdpm = NULL;
 
 static int fc2_taper_timer;
 static int ibus_lmt_change_timer;
@@ -198,7 +198,7 @@ static bool usbpd_get_pps_status(struct usbpd_pm *pdpm)
 	if (check_typec_attached_snk(pdpm->tcpc) < 0)
 		return false;
 
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i < 50; i++) {
 		if (pdpm->is_pps_en_unlock) {
 			break;
 		}
