@@ -78,8 +78,8 @@ struct onewire_gpio_data {
 static struct class *onewire_class;
 static int onewire_major;
 
-static int onewire_gpio_detected;
-static struct onewire_gpio_data *g_onewire_data;
+static int onewire_gpio_detected = false; // 0
+static struct onewire_gpio_data *g_onewire_data = NULL;
 
 void Delay_us(unsigned int T)
 {
@@ -410,7 +410,7 @@ static DEVICE_ATTR(ow_gpio, S_IRUGO | S_IWUSR | S_IWGRP,
 static int onewire_gpio_probe(struct platform_device *pdev)
 {
 	int retval = 0;
-	struct onewire_gpio_data *onewire_data;
+	struct onewire_gpio_data *onewire_data = NULL;
 	struct kobject *p;
 
 	ow_log("onewire probe entry\n");
@@ -439,9 +439,9 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	g_onewire_data = onewire_data;
 	onewire_data->pdev = pdev;
 	platform_set_drvdata(pdev, onewire_data);
+	g_onewire_data = onewire_data;
 
 	raw_spin_lock_init(&g_onewire_data->lock);
 
@@ -474,15 +474,15 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 	onewire_data->ow_gpio_chip = gpiod_to_chip(onewire_data->ow_gpio_desc);
 
 	onewire_data->gpio_in_out_reg = devm_ioremap(&pdev->dev,
-			(uint32_t)onewire_data->onewire_gpio_level_addr, 0x4);
+			(uint64_t)onewire_data->onewire_gpio_level_addr, 0x4);
 	onewire_data->gpio_cfg_reg = devm_ioremap(&pdev->dev,
-			(uint32_t)onewire_data->onewire_gpio_cfg_addr, 0x4);
+			(uint64_t)onewire_data->onewire_gpio_cfg_addr, 0x4);
 	ow_log("onewire_gpio_level_addr is %x, onewire_gpio_cfg_addr is %x\n",
-			(uint32_t)(onewire_data->onewire_gpio_level_addr),
-			(uint32_t)(onewire_data->onewire_gpio_cfg_addr));
+			(uint64_t)(onewire_data->onewire_gpio_level_addr),
+			(uint64_t)(onewire_data->onewire_gpio_cfg_addr));
 	ow_log("onewire_data->gpio_cfg_reg is %x, onewire_data->gpio_in_out_reg is %x\n",
-			(uint32_t)(onewire_data->gpio_cfg_reg),
-			(uint32_t)(onewire_data->gpio_in_out_reg));
+			(uint64_t)(onewire_data->gpio_cfg_reg),
+			(uint64_t)(onewire_data->gpio_in_out_reg));
 
 	// create device node
 	onewire_data->dev = device_create(onewire_class, pdev->dev.parent->parent,
@@ -593,10 +593,20 @@ static int __init onewire_gpio_init(void)
 		goto class_unreg;
 	}
 
-	return platform_driver_register(&onewire_gpio_driver);
+	retval = platform_driver_register(&onewire_gpio_driver);
+	if (retval) {
+		ow_err("platform_driver_register fail, retval = %d \n ", retval);
+		goto class_unreg;
+	}
+
+	onewire_gpio_detected = true;
+	ow_info("init from probe successfully, onewire_gpio_detected = %d.\n", onewire_gpio_detected);
+	return retval;
 
 class_unreg:
 	class_destroy(onewire_class);
+	onewire_gpio_detected = false;
+	ow_err("init from probe failed, exit!\n");
 	return retval;
 }
 

@@ -36,6 +36,8 @@
 #define ds_err	pr_err
 #define ds_log	pr_info
 
+#define PROBE_CNT_MAX	3
+
 struct ds28e16_data {
 	struct platform_device *pdev;
 	struct device *dev;
@@ -51,6 +53,8 @@ struct ds28e16_data {
 
 struct mutex ds_cmd_lock; // cmd Lock 2022_4_19 updated
 
+// ow-gpio init check
+extern int onewire_gpio_get_status(void);
 unsigned int attr_trytimes = 1;
 
 unsigned char session_seed[32] = {
@@ -1796,10 +1800,22 @@ static void authentic_work(struct work_struct *work)
 static int ds28e16_probe(struct platform_device *pdev)
 {
 	int retval = 0;
-	struct ds28e16_data *ds28e16_data;
+	struct ds28e16_data *ds28e16_data = NULL;
+	static int probe_cnt = 0;
 
-	ds_log("%s entry\n", __func__);
-	ds_dbg("platform_device is %s\n", pdev->name);
+	if (probe_cnt == 0) {
+		ds_log("%s entry, probe_cnt: %d\n", __func__, ++probe_cnt);
+		ds_dbg("platform_device is %s", pdev->name);
+	}
+
+	rc = onewire_gpio_get_status();
+	if (!rc) {
+		if (probe_cnt < PROBE_CNT_MAX) {
+			ds_err("ow-gpio not ready, defer probe\n");
+			return -EPROBE_DEFER;
+		}
+	}
+
 	if (strcmp(pdev->name, "soc:maxim_ds28e16") != 0)
 		return -ENODEV;
 
@@ -1849,6 +1865,7 @@ static int ds28e16_probe(struct platform_device *pdev)
 	schedule_delayed_work(&ds28e16_data->authentic_work,
 			msecs_to_jiffies(500)); //updated 20220615 make sure onewire gpio source ready
 
+	ds_log("%s successfully\n", __func__);
 	return 0;
 
 ds28e16_create_group_err:
@@ -1858,6 +1875,7 @@ ds28e16_psy_register_err:
 	dev_set_drvdata(ds28e16_data->dev, NULL);
 ds28e16_parse_dt_err:
 	kfree(ds28e16_data);
+	ds_err("%s error\n", __func__);
 	return retval;
 }
 
