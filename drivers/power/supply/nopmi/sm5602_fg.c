@@ -2843,8 +2843,15 @@ static bool fg_check_device_id(struct i2c_client *client)
 
 static bool fg_init(struct i2c_client *client)
 {
-	int ret;
+	int ret = 0;
 	struct sm_fg_chip *sm = i2c_get_clientdata(client);
+
+	/* sm5602 i2c read check */
+	ret = fg_get_device_id(client);
+	if (ret < 0) {
+		pr_err("%s: fail to do i2c read(%d)\n", __func__, ret);
+		return false;
+	}
 
 	if (fg_check_reg_init_need(client)) {
 		ret = fg_reset(sm);
@@ -3269,16 +3276,8 @@ static int fg_battery_parse_dt(struct sm_fg_chip *sm)
 bool hal_fg_init(struct i2c_client *client)
 {
 	struct sm_fg_chip *sm = i2c_get_clientdata(client);
-	int ret = 0;
 
 	pr_info("sm5602 hal_fg_init...\n");
-
-	/* sm5602 i2c read check */
-	ret = fg_get_device_id(client);
-	if (ret < 0) {
-		pr_err("%s: fail to do i2c read(%d)\n", __func__, ret);
-		return false;
-	}
 
 	mutex_lock(&sm->data_lock);
 	if (client->dev.of_node) {
@@ -3489,8 +3488,8 @@ static int sm_fg_probe(struct i2c_client *client, const struct i2c_device_id *id
 			//goto err_1;
 		}
 	}
-#endif
 	//fg_irq_thread(client->irq, sm); // if IRQF_TRIGGER_FALLING or IRQF_TRIGGER_RISING is needed, enable initial irq.
+#endif
 
 	sm->nb.notifier_call = sm5602_notifier_call;
 	ret = power_supply_reg_notifier(&sm->nb);
@@ -3521,6 +3520,7 @@ err_free:
 	mutex_destroy(&sm->data_lock);
 	mutex_destroy(&sm->i2c_rw_lock);
 	devm_kfree(&client->dev,sm);
+	pr_err("sm fuel gauge probe fail!\n");
 	return ret;
 }
 

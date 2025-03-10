@@ -35,6 +35,8 @@
 #define JEITA_BYPASS_WARM_DISABLE_CP_THR	480
 #define JEITA_BYPASS_COOL_DISABLE_CP_THR	100
 
+#define PROBE_CNT_MAX 10
+
 enum {
 	PM_ALGO_RET_OK,
 	PM_ALGO_RET_THERM_FAULT,
@@ -1355,14 +1357,17 @@ static int usbpd_psy_notifier_cb(struct notifier_block *nb,
 
 static int __init usbpd_pm_init(void)
 {
-	struct usbpd_pm *pdpm;
-	int ret;
+	struct usbpd_pm *pdpm = NULL;
+	int ret = 0;
 	static int probe_cnt = 0;
 
-	if (probe_cnt == 0) {
-		pr_info("2012.09.04 wsy %s: start\n", __func__);
+	if (probe_cnt == 0)
+		pr_info("2012.09.04 wsy %s: start, probe_cnt: %d\n", __func__, ++probe_cnt);
+
+	if (probe_cnt > PROBE_CNT_MAX) {
+		pr_err("2012.09.04 wsy %s max_attempt reached!!\n");
+		return 0;
 	}
-	pr_info("usbpd_pm_init start: probe_cnt: %d\n", ++probe_cnt);
 
 	pdpm = kzalloc(sizeof(*pdpm), GFP_KERNEL);
 	if (!pdpm)
@@ -1429,8 +1434,7 @@ static int __init usbpd_pm_init(void)
 	}
 
 	pdpm->fcc_votable = find_votable("FCC");
-	pr_info("usbpd_pm_init end\n");
-	pr_info("2012.09.04 wsy %s: end\n", __func__);
+	pr_info("2012.09.04 wsy %s successfully\n", __func__);
 	return 0;
 
 cleanup:
@@ -1444,6 +1448,7 @@ cleanup:
 	kfree(pdpm);
 	__pdpm = NULL;
 
+	pr_info("2012.09.04 wsy %s fail!\n", __func__);
 	return ret;
 }
 

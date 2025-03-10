@@ -1217,18 +1217,15 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	struct nopmi_chg *nopmi_chg = NULL;
 	struct power_supply *bms_psy = NULL;
 	struct power_supply *main_psy = NULL;
-	int rc;
+	int rc = 0;
 	static int probe_cnt = 0;
 
-	pr_info("wsy nopmi_chg probe start, probe_cnt: %d\n", ++probe_cnt);
+	if (probe_cnt == 0)
+		pr_info("wsy nopmi_chg probe start, probe_cnt: %d\n", ++probe_cnt);
 
-	if (!pdev->dev.of_node)
-		return -ENODEV;
-
-	nopmi_chg = devm_kzalloc(&pdev->dev, sizeof(struct nopmi_chg), GFP_KERNEL);
-	if (!nopmi_chg) {
-		pr_err("%s: Failed to allocate memory\n", __func__);
-		return -ENOMEM;
+	if (probe_cnt > PROBE_CNT_MAX) {
+		pr_err("wsy nopmi_chg probe max_attempt reached!!\n");
+		return 0;
 	}
 
 	bms_psy = power_supply_get_by_name("bms");
@@ -1244,6 +1241,18 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 		return -EPROBE_DEFER;
 	}
 
+	if (pdev->dev.of_node) {
+		nopmi_chg = devm_kzalloc(&pdev->dev, sizeof(struct nopmi_chg), GFP_KERNEL);
+		if (!nopmi_chg) {
+			pr_err("%s: Failed to allocate memory\n", __func__);
+			rc = -ENOMEM;
+			goto dev_err;
+		}
+	} else {
+		rc = -ENODEV;
+		goto dev_err;
+	}
+
 	nopmi_chg->dev = &pdev->dev;
 	nopmi_chg->pdev = pdev;
 	platform_set_drvdata(pdev, nopmi_chg);
@@ -1252,19 +1261,19 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	rc = nopmi_parse_dt(nopmi_chg);
 	if (rc < 0) {
 		pr_err("%s: Couldn't parse device tree, rc=%d\n", __func__, rc);
-		goto cleanup;
+		goto psy_err;
 	}
 
 	rc = nopmi_init_batt_psy(nopmi_chg);
 	if (rc < 0) {
 		pr_err("%s: Couldn't initialize batt psy, rc=%d\n", __func__, rc);
-		goto cleanup;
+		goto psy_err;
 	}
 
 	rc = nopmi_init_usb_psy(nopmi_chg);
 	if (rc < 0) {
 		pr_err("%s: Couldn't initialize usb psy, rc=%d\n", __func__, rc);
-		goto cleanup;
+		goto psy_err;
 	}
 
 	nopmi_chg->bms_psy = bms_psy;
@@ -1289,12 +1298,13 @@ static int nopmi_chg_probe(struct platform_device *pdev)
 	pr_info("wsy nopmi_chg probe end\n");
 	return 0;
 
-cleanup:
-	//devm_kfree(&pdev->dev,nopmi_chg);
+psy_err:
+	g_nopmi_chg = NULL;
+dev_err:
 	power_supply_put(bms_psy);
 	power_supply_put(main_psy);
-	g_nopmi_chg = NULL;
 
+	//devm_kfree(&pdev->dev,nopmi_chg);
 	pr_err("wsy nopmi_chg probe fail\n");
 	return rc;
 }

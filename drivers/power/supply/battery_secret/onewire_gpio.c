@@ -411,7 +411,7 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 {
 	int retval = 0;
 	struct onewire_gpio_data *onewire_data = NULL;
-	struct kobject *p;
+	//struct kobject *p = NULL;
 
 	ow_log("onewire probe entry\n");
 
@@ -474,15 +474,22 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 	onewire_data->ow_gpio_chip = gpiod_to_chip(onewire_data->ow_gpio_desc);
 
 	onewire_data->gpio_in_out_reg = devm_ioremap(&pdev->dev,
-			(uint64_t)onewire_data->onewire_gpio_level_addr, 0x4);
+			onewire_data->onewire_gpio_level_addr, 0x4);
 	onewire_data->gpio_cfg_reg = devm_ioremap(&pdev->dev,
-			(uint64_t)onewire_data->onewire_gpio_cfg_addr, 0x4);
+			onewire_data->onewire_gpio_cfg_addr, 0x4);
+
+	if (!onewire_data->gpio_in_out_reg || !onewire_data->gpio_cfg_reg) {
+		ow_err("Failed to set ioremap\n");
+		retval = -ENOMEM;
+		goto onewire_ow_gpio_err;
+	}
+
 	ow_log("onewire_gpio_level_addr is %x, onewire_gpio_cfg_addr is %x\n",
-			(uint64_t)(onewire_data->onewire_gpio_level_addr),
-			(uint64_t)(onewire_data->onewire_gpio_cfg_addr));
+			(uintptr_t)(onewire_data->onewire_gpio_level_addr),
+			(uintptr_t)(onewire_data->onewire_gpio_cfg_addr));
 	ow_log("onewire_data->gpio_cfg_reg is %x, onewire_data->gpio_in_out_reg is %x\n",
-			(uint64_t)(onewire_data->gpio_cfg_reg),
-			(uint64_t)(onewire_data->gpio_in_out_reg));
+			(uintptr_t)(onewire_data->gpio_cfg_reg),
+			(uintptr_t)(onewire_data->gpio_in_out_reg));
 
 	// create device node
 	onewire_data->dev = device_create(onewire_class, pdev->dev.parent->parent,
@@ -492,10 +499,9 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 		goto onewire_interface_dev_create_err;
 	}
 
-	p = &onewire_data->dev->kobj;
-
+	// p = &onewire_data->dev->kobj;
 	// create attr file
-	retval = sysfs_create_file(p, &dev_attr_ow_gpio.attr);
+	retval = sysfs_create_file(&onewire_data->dev->kobj, &dev_attr_ow_gpio.attr);
 	if (retval < 0) {
 		ow_err("Failed to create sysfs attr file\n");
 		goto onewire_sysfs_ow_gpio_err;
@@ -504,13 +510,14 @@ static int onewire_gpio_probe(struct platform_device *pdev)
 	retval = sysfs_create_link(&onewire_data->dev->kobj, &pdev->dev.kobj, "pltdev");
 	if (retval) {
 		ow_err("Failed to create sysfs link\n");
-		goto onewire_syfs_create_link_err;
+		goto onewire_sysfs_create_link_err;
 	}
 
+	ow_log("onewire probe successfully\n");
 	return 0;
-onewire_syfs_create_link_err:
-	if (gpio_is_valid(onewire_data->ow_gpio))
-		sysfs_remove_file(&pdev->dev.kobj, &dev_attr_ow_gpio.attr);
+
+onewire_sysfs_create_link_err:
+	sysfs_remove_file(&onewire_data->dev->kobj, &dev_attr_ow_gpio.attr);
 onewire_sysfs_ow_gpio_err:
 	device_destroy(onewire_class, onewire_major);
 onewire_interface_dev_create_err:
@@ -519,7 +526,9 @@ onewire_interface_dev_create_err:
 onewire_ow_gpio_err:
 onewire_pinctrl_err:
 onewire_parse_dt_err:
-	kfree(onewire_data);
+	g_onewire_data = NULL;
+	//kfree(onewire_data);
+	ow_log("onewire probe fail!\n");
 	return retval;
 }
 
@@ -527,11 +536,21 @@ static int onewire_gpio_remove(struct platform_device *pdev)
 {
 	struct onewire_gpio_data *onewire_data = platform_get_drvdata(pdev);
 
-	if (gpio_is_valid(onewire_data->ow_gpio)) {
-		sysfs_remove_file(&pdev->dev.kobj, &dev_attr_ow_gpio.attr);
-		gpio_free(onewire_data->ow_gpio);
+	if (!onewire_data)
+		return 0;
+
+	if (onewire_data->dev) {
+		sysfs_remove_link(&onewire_data->dev->kobj, "pltdev");
+		sysfs_remove_file(&onewire_data->dev->kobj, &dev_attr_ow_gpio.attr);
+		device_destroy(onewire_class, onewire_major);
 	}
-	kfree(onewire_data);
+
+	if (gpio_is_valid(onewire_data->ow_gpio))
+		gpio_free(onewire_data->ow_gpio);
+
+	g_onewire_data = NULL;
+	platform_set_drvdata(pdev, NULL);
+	//kfree(onewire_data);
 
 	return 0;
 }
@@ -561,6 +580,7 @@ static const struct file_operations onewire_dev_fops = {
 
 static const struct of_device_id onewire_gpio_dt_match[] = {
 	{.compatible = "xiaomi,onewire_gpio"},
+	{},
 };
 
 static struct platform_driver onewire_gpio_driver = {
@@ -617,6 +637,7 @@ static void __exit onewire_gpio_exit(void)
 
 	unregister_chrdev(onewire_major, "onewirectrl");
 	class_destroy(onewire_class);
+	onewire_gpio_detected = false;
 }
 
 subsys_initcall(onewire_gpio_init);

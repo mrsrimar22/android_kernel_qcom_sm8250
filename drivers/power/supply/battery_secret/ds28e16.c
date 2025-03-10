@@ -1800,20 +1800,22 @@ static void authentic_work(struct work_struct *work)
 static int ds28e16_probe(struct platform_device *pdev)
 {
 	int retval = 0;
+	int rc = 0;
 	struct ds28e16_data *ds28e16_data = NULL;
 	static int probe_cnt = 0;
 
 	if (probe_cnt == 0) {
-		ds_log("%s entry, probe_cnt: %d\n", __func__, ++probe_cnt);
+		ds_log("%s entry\n", __func__);
 		ds_dbg("platform_device is %s", pdev->name);
 	}
 
 	rc = onewire_gpio_get_status();
 	if (!rc) {
 		if (probe_cnt < PROBE_CNT_MAX) {
-			ds_err("ow-gpio not ready, defer probe\n");
+			ds_err("ow-gpio not ready, defer probe! attempt: %d\n", ++probe_cnt);
 			return -EPROBE_DEFER;
 		}
+		ds_err("ow-gpio not ready, but max_attempt reached!!\n");
 	}
 
 	if (strcmp(pdev->name, "soc:maxim_ds28e16") != 0)
@@ -1869,12 +1871,12 @@ static int ds28e16_probe(struct platform_device *pdev)
 	return 0;
 
 ds28e16_create_group_err:
-	//sysfs_remove_groups(&ds28e16_data->dev->kobj, &(&ds_attr_group));
+	verify_psy_unregister(ds28e16_data);
 ds28e16_psy_register_err:
 	mutex_destroy(&ds_cmd_lock); //2022_4_20 updated
-	dev_set_drvdata(ds28e16_data->dev, NULL);
+	platform_set_drvdata(pdev, NULL);
 ds28e16_parse_dt_err:
-	kfree(ds28e16_data);
+	//devm_kfree(&pdev->dev, ds28e16_data);
 	ds_err("%s error\n", __func__);
 	return retval;
 }
@@ -1883,9 +1885,12 @@ static int ds28e16_remove(struct platform_device *pdev)
 {
 	struct ds28e16_data *ds28e16_data = platform_get_drvdata(pdev);
 
+	cancel_delayed_work_sync(&ds28e16_data->authentic_work);
+	sysfs_remove_group(&ds28e16_data->dev->kobj, &ds_attr_group);
 	mutex_destroy(&ds_cmd_lock); //2022_4_19 updated
 	verify_psy_unregister(ds28e16_data);
-	kfree(ds28e16_data);
+	platform_set_drvdata(pdev, NULL);
+	//kfree(ds28e16_data);
 
 	return 0;
 }
@@ -1914,6 +1919,7 @@ static const struct file_operations ds28e16_dev_fops = {
 
 static const struct of_device_id ds28e16_dt_match[] = {
 	{.compatible = "maxim,ds28e16"},
+	{},
 };
 
 static struct platform_driver ds28e16_driver = {

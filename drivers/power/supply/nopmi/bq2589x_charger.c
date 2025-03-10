@@ -2423,8 +2423,8 @@ static int bq2589x_charger_probe(struct i2c_client *client,
 {
 	struct bq2589x *bq = NULL;
 	struct tcpc_device *tcpc_dev = NULL;
-	int irqn;
-	int ret;
+	int irqn = 0;
+	int ret = 0;
 	static int probe_cnt = 0;
 
 	pr_info("probe start, probe_cnt: %d\n", ++probe_cnt);
